@@ -1,4 +1,4 @@
-﻿namespace GFrameworkGodotTemplate.scripts.core.ui;
+namespace GFrameworkGodotTemplate.scripts.core.ui;
 
 /// <summary>
 /// UI根节点接口，定义了UI页面容器的基本操作
@@ -10,4 +10,10 @@ public interface IUiRoot
     /// </summary>
     /// <param name="child">要添加的UI页面子节点</param>
     void AddUiPage(IUiPage child);
+
+    /// <summary>
+    /// 从UI根节点移除子页面
+    /// </summary>
+    /// <param name="child">要移除的UI页面子节点</param>
+    void RemoveUiPage(IUiPage child);
 }

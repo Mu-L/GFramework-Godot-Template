@@ -26,4 +26,14 @@ public partial class ControlUiRoot : Control, IUiRoot
 		else
 			throw new InvalidOperationException("UIPage must be a Godot Node");
 	}
+
+	/// <summary>
+	/// 从UI根节点移除UI页面
+	/// </summary>
+	/// <param name="child">要移除的UI页面，必须实现IUiPage接口</param>
+	public void RemoveUiPage(IUiPage child)
+	{
+		if (child is Node node)
+			RemoveChild(node);
+	}
 }

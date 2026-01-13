@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace GFrameworkGodotTemplate.scripts.core.ui;
 
@@ -42,6 +42,7 @@ public abstract class AbstractUiRouter<T>(T uiRoot, IUiFactory factory) : IUiRou
 
         var top = _stack.Pop();
         top.OnExit();
+        uiRoot.RemoveUiPage(top);
 
         // 恢复新的栈顶页面
         if (_stack.Count > 0)
