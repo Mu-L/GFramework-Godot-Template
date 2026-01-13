@@ -1,7 +1,7 @@
 ﻿using GFramework.Core.Abstractions.architecture;
 using GFramework.Game.architecture;
 
-namespace GFrameworkTemplate.scripts.module;
+namespace GFrameworkGodotTemplate.scripts.module;
 
 /// <summary>
 /// 工具模块类，负责安装和管理游戏中的实用工具组件

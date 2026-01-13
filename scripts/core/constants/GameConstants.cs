@@ -1,4 +1,4 @@
-﻿namespace GFrameworkTemplate.scripts.core.constants;
+﻿namespace GFrameworkGodotTemplate.scripts.core.constants;
 
 public static class GameConstants
 {

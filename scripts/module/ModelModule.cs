@@ -1,7 +1,7 @@
 ﻿using GFramework.Core.Abstractions.architecture;
 using GFramework.Game.architecture;
 
-namespace GFrameworkTemplate.scripts.module;
+namespace GFrameworkGodotTemplate.scripts.module;
 
 /// <summary>
 /// Godot模块实现类，负责安装和注册游戏中的各种模型
