@@ -10,7 +10,8 @@ config_version=5
 
 [application]
 
-config/name="GFramework-Template"
+config/name="GFramework-Godot-Template"
+run/main_scene="uid://6s2urcdmkpbt"
 config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
 config/icon="uid://p5dak2wsc1nk"
 
@@ -18,9 +19,13 @@ config/icon="uid://p5dak2wsc1nk"
 
 buses/default_bus_layout="res://resource/project_bus_layout.tres"
 
+[autoload]
+
+GameEntryPoint="*res://global/game_entry_point.tscn"
+
 [dotnet]
 
-project/assembly_name="GFramework-Template"
+project/assembly_name="GFramework-Godot-Template"
 
 [file_customization]
 
