@@ -9,20 +9,29 @@ public interface IUiPage
     /// 页面进入时调用的方法
     /// </summary>
     /// <param name="param">页面进入时传递的参数，可为空</param>
-    public void OnEnter(IUiPageEnterParam? param);
-    
+    void OnEnter(IUiPageEnterParam? param);
+
     /// <summary>
     /// 页面退出时调用的方法
     /// </summary>
-    public void OnExit() {}
-    
+    void OnExit();
     /// <summary>
     /// 页面暂停时调用的方法
     /// </summary>
-    public void OnPause() {}
-    
+    void OnPause();
+
     /// <summary>
     /// 页面恢复时调用的方法
     /// </summary>
-    public void OnResume() {}
+    void OnResume();
+
+    /// <summary>
+    /// 页面被覆盖时调用（不销毁）
+    /// </summary>
+    void OnHide();
+
+    /// <summary>
+    /// 页面重新显示
+    /// </summary>
+    void OnShow();
 }

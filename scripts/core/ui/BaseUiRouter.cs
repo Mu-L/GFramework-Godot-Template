@@ -43,45 +43,85 @@ public class BaseUiRouter<T> :AbstractSystem, IUiRouter where T : IUiRoot
     /// </summary>
     /// <param name="uiKey">UI页面标识符</param>
     /// <param name="param">页面进入参数，可为空</param>
-    public void Push(string uiKey, IUiPageEnterParam? param = null)
+    /// <param name="policy">页面切换策略</param>
+    public void Push(
+        string uiKey,
+        IUiPageEnterParam? param = null,
+        UiTransitionPolicy policy = UiTransitionPolicy.Exclusive
+    )
     {
-        // 暂停当前栈顶页面
         if (_stack.Count > 0)
-            _stack.Peek().OnPause();
+        {
+            var current = _stack.Peek();
+            current.OnPause();
+
+            if (policy == UiTransitionPolicy.Exclusive)
+                current.OnHide();
+        }
 
         var page = Factory.Create(uiKey);
         UiRoot.AddUiPage(page);
         _stack.Push(page);
 
         page.OnEnter(param);
+        page.OnShow();
     }
 
-    /// <summary>
-    /// 弹出栈顶页面并销毁
+
+        /// <summary>
+    /// 弹出栈顶页面并根据策略处理页面
     /// </summary>
-    public void Pop()
+    /// <param name="policy">弹出策略，默认为销毁策略</param>
+    public void Pop(UiPopPolicy policy = UiPopPolicy.Destroy)
     {
         if (_stack.Count == 0) return;
 
         var top = _stack.Pop();
         top.OnExit();
-        UiRoot.RemoveUiPage(top);
 
-        // 恢复新的栈顶页面
+        // 根据弹出策略决定是销毁页面还是隐藏页面
+        if (policy == UiPopPolicy.Destroy)
+        {
+            UiRoot.RemoveUiPage(top);
+        }
+        else
+        {
+            top.OnHide();
+        }
+
+        // 如果栈中还有页面，则将下一个页面设为当前活动页面
         if (_stack.Count > 0)
-            _stack.Peek().OnResume();
+        {
+            var next = _stack.Peek();
+            next.OnResume();
+            next.OnShow();
+        }
     }
+
+
 
     /// <summary>
     /// 替换当前所有页面为新页面
     /// </summary>
     /// <param name="uiKey">新UI页面标识符</param>
     /// <param name="param">页面进入参数，可为空</param>
-    public void Replace(string uiKey, IUiPageEnterParam? param = null)
+    /// <param name="popPolicy">弹出页面时的销毁策略，默认为销毁</param>
+    /// <param name="pushPolicy">推入页面时的过渡策略，默认为独占</param>
+    public void Replace(
+        string uiKey,
+        IUiPageEnterParam? param = null,
+        UiPopPolicy popPolicy = UiPopPolicy.Destroy,
+        UiTransitionPolicy pushPolicy = UiTransitionPolicy.Exclusive
+    )
     {
-        Clear();
-        Push(uiKey, param);
+        // 清空当前页面栈中的所有页面
+        while (_stack.Count > 0)
+            Pop(popPolicy);
+
+        // 推入新的页面到栈中
+        Push(uiKey, param, pushPolicy);
     }
+
 
     /// <summary>
     /// 清空所有页面栈中的页面

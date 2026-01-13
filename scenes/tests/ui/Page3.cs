@@ -1,13 +1,13 @@
-using Godot;
 using GFramework.Core.Abstractions.controller;
 using GFramework.SourceGenerators.Abstractions.logging;
 using GFramework.SourceGenerators.Abstractions.rule;
 using GFrameworkGodotTemplate.scripts.core.ui;
 
+namespace GFrameworkGodotTemplate.scenes.tests.ui;
 
 [ContextAware]
 [Log]
-public partial class Page3 :Control,IController,IUiPage
+public partial class Page3 : ControlUiPage,IController,IUiPage
 {
 	/// <summary>
 	/// 节点准备就绪时的回调方法
