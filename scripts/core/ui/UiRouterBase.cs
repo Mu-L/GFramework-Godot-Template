@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GFramework.Core.extensions;
 using GFramework.Core.system;
+using GFramework.SourceGenerators.Abstractions.logging;
 
 namespace GFrameworkGodotTemplate.scripts.core.ui;
 
@@ -8,14 +9,16 @@ namespace GFrameworkGodotTemplate.scripts.core.ui;
 /// 抽象UI路由基类，提供页面栈管理功能
 /// </summary>
 /// <typeparam name="T">UI根节点类型，必须实现IUiRoot接口</typeparam>
-public class UiRouterBase<T> :AbstractSystem, IUiRouter where T : IUiRoot
+[Log]
+public partial class UiRouterBase<T> : AbstractSystem, IUiRouter where T : IUiRoot
 {
     protected T UiRoot = default!;
+
     /// <summary>
     /// UI工厂实例，用于创建UI相关的对象
     /// </summary>
     protected IUiFactory Factory { get; private set; } = null!;
-    
+
     /// <summary>
     /// 初始化方法，在页面初始化时获取UI工厂实例
     /// </summary>
@@ -68,7 +71,7 @@ public class UiRouterBase<T> :AbstractSystem, IUiRouter where T : IUiRoot
     }
 
 
-        /// <summary>
+    /// <summary>
     /// 弹出栈顶页面并根据策略处理页面
     /// </summary>
     /// <param name="policy">弹出策略，默认为销毁策略</param>
@@ -97,7 +100,6 @@ public class UiRouterBase<T> :AbstractSystem, IUiRouter where T : IUiRoot
             next.OnShow();
         }
     }
-
 
 
     /// <summary>

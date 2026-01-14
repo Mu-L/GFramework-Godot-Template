@@ -1,6 +1,7 @@
 ﻿using System;
 using GFramework.Core.extensions;
 using GFramework.Core.utility;
+using GFramework.SourceGenerators.Abstractions.logging;
 using Godot;
 
 namespace GFrameworkGodotTemplate.scripts.core.ui;
@@ -8,8 +9,7 @@ namespace GFrameworkGodotTemplate.scripts.core.ui;
 /// <summary>
 /// UI工厂类，用于创建和实例化UI页面
 /// </summary>
-/// <param name="registry">UI注册表，用于获取PackedScene类型的UI资源</param>
-public class UiFactory:AbstractContextUtility, IUiFactory
+public partial class UiFactory:AbstractContextUtility, IUiFactory
 {
     protected IWritableUiRegistry<PackedScene> Registry = null!;
     
