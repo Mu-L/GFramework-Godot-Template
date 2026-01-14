@@ -6,21 +6,26 @@ using Godot;
 
 [ContextAware]
 [Log]
-public partial class Page2 : Control,IController
+public partial class Page2 : Control,IController,IUiPageProvider
 {
-	private ControlUiPageBehavior _page = null!;
+	private ControlUiPageBehavior? _page;
+	public IUiPage GetPage()
+	{
+		_page ??= new ControlUiPageBehavior(this);
+		return _page;
+	}
 	/// <summary>
 	/// 节点准备就绪时的回调方法
 	/// 在节点添加到场景树后调用
 	/// </summary>
 	public override void _Ready()
 	{
-		_page = new ControlUiPageBehavior(this);
+		
 	}
 
 	public void OnEnter(IUiPageEnterParam? param)
 	{
 		_log.Info("Page2 OnEnter");
 	}
-	public IUiPage AsPage() => _page;
+	
 }

@@ -6,6 +6,11 @@
 public interface IUiPage
 {
     /// <summary>
+    /// 获取页面视图对象
+    /// </summary>
+    /// <returns>页面视图实例</returns>
+    object View { get; }
+    /// <summary>
     /// 页面进入时调用的方法
     /// </summary>
     /// <param name="param">页面进入时传递的参数，可为空</param>

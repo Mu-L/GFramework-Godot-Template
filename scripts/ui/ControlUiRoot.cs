@@ -15,7 +15,7 @@ namespace GFrameworkGodotTemplate.scripts.ui;
 /// </summary>
 [Log]
 [ContextAware]
-public partial class ControlUiRoot : Godot.Control, IUiRoot
+public partial class ControlUiRoot : Control, IUiRoot
 {
 	public override void _Ready()
 	{
@@ -34,10 +34,10 @@ public partial class ControlUiRoot : Godot.Control, IUiRoot
 	/// <exception cref="InvalidOperationException">当传入的child不是Godot Node类型时抛出</exception>
 	public void AddUiPage(IUiPage child)
 	{
-		if (child is Node node)
+		if (child.View is Node node)
 			AddChild(node);
 		else
-			throw new InvalidOperationException("UIPage must be a Godot Node");
+			throw new InvalidOperationException("UIPage View must be a Godot Node");
 	}
 
 	/// <summary>
@@ -46,7 +46,7 @@ public partial class ControlUiRoot : Godot.Control, IUiRoot
 	/// <param name="child">要移除的UI页面，必须实现IUiPage接口</param>
 	public void RemoveUiPage(IUiPage child)
 	{
-		if (child is Node node)
+		if (child.View is Node node)
 			RemoveChild(node);
 	}
 }

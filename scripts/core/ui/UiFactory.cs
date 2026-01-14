@@ -25,8 +25,10 @@ public class UiFactory:AbstractContextUtility, IUiFactory
         var scene = Registry.Get(uiKey);
         // 实例化场景节点
         var node  = scene.Instantiate();
-
-        return node as IUiPage ?? throw new InvalidCastException($"UI scene {uiKey} must inherit IUiPage");
+        if (node is not IUiPageProvider provider)
+            throw new InvalidCastException(
+                $"UI scene {uiKey} must implement IUiPageProvider");
+        return provider.GetPage();
     }
 
     /// <summary>

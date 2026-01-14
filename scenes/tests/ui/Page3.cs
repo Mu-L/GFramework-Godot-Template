@@ -10,7 +10,12 @@ namespace GFrameworkGodotTemplate.scenes.tests.ui;
 [Log]
 public partial class Page3 : Control,IController
 {
-	private ControlUiPageBehavior _page = null!;
+	private ControlUiPageBehavior? _page;
+	public IUiPage GetPage()
+	{
+		_page ??= new ControlUiPageBehavior(this);
+		return _page;
+	}
 	/// <summary>
 	/// 节点准备就绪时的回调方法
 	/// 在节点添加到场景树后调用
@@ -24,5 +29,4 @@ public partial class Page3 : Control,IController
 	{
 		_log.Info("Page3 OnEnter");
 	}
-	public IUiPage AsPage() => _page;
 }

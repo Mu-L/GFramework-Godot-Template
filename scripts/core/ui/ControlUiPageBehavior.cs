@@ -9,6 +9,8 @@ namespace GFrameworkGodotTemplate.scripts.core.ui;
 /// <param name="owner">拥有该行为的Control节点</param>
 public class ControlUiPageBehavior(Control owner) : IUiPage
 {
+    public object View { get; } = owner;
+
     /// <summary>
     /// 当页面进入时调用的方法
     /// </summary>
