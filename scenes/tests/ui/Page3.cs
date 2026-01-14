@@ -10,7 +10,7 @@ namespace GFrameworkGodotTemplate.scenes.tests.ui;
 
 [ContextAware]
 [Log]
-public partial class Page3 : Control,IController
+public partial class Page3 : Control,IController,IUiPageProvider
 {
 	private ControlUiPageBehavior? _page;
 	public IUiPage GetPage()

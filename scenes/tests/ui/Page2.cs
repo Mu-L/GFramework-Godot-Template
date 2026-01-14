@@ -28,7 +28,7 @@ public partial class Page2 : Control,IController,IUiPageProvider
 	/// </summary>
 	public override void _Ready()
 	{
-		var uiRouter = ContextAwareExtensions.GetSystem<IUiRouter>(this)!;
+		var uiRouter = this.GetSystem<IUiRouter>()!;
 		MainMenuButton.Pressed += () => { uiRouter.Push(UiKeys.MainMenu); };
 		Page1Button.Pressed += () => { uiRouter.Push(UiKeys.Page1); };
 		Page3Button.Pressed += () => { uiRouter.Push(UiKeys.Page3); };

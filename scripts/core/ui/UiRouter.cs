@@ -28,7 +28,7 @@ public partial class UiRouter : AbstractSystem, IUiRouter
     protected override void OnInit()
     {
         _factory = this.GetUtility<IUiFactory>()!;
-        _log.Debug("UiRouter initialized. Factory={Factory}", _factory.GetType().Name);
+        _log.Debug("UiRouter initialized. Factory={0}", _factory.GetType().Name);
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ public partial class UiRouter : AbstractSystem, IUiRouter
     public void BindRoot(IUiRoot root)
     {
         _uiRoot = root;
-        _log.Debug("Bind UI Root: {RootType}", root.GetType().Name);
+        _log.Debug("Bind UI Root: {0}", root.GetType().Name);
     }
 
     /// <summary>
@@ -53,31 +53,31 @@ public partial class UiRouter : AbstractSystem, IUiRouter
     )
     {
         _log.Debug(
-            "Push UI Page: key={UiKey}, policy={Policy}, stackBefore={StackCount}",
+            "Push UI Page: key={0}, policy={1}, stackBefore={2}",
             uiKey, policy, _stack.Count
         );
 
         if (_stack.Count > 0)
         {
             var current = _stack.Peek();
-            _log.Debug("Pause current page: {Page}", current.GetType().Name);
+            _log.Debug("Pause current page: {0}", current.GetType().Name);
             current.OnPause();
 
             if (policy == UiTransitionPolicy.Exclusive)
             {
-                _log.Debug("Hide current page (Exclusive): {Page}", current.GetType().Name);
+                _log.Debug("Hide current page (Exclusive): {0}", current.GetType().Name);
                 current.OnHide();
             }
         }
 
         var page = _factory.Create(uiKey);
-        _log.Debug("Create UI Page instance: {Page}", page.GetType().Name);
+        _log.Debug("Create UI Page instance: {0}", page.GetType().Name);
 
         _uiRoot.AddUiPage(page);
         _stack.Push(page);
 
         _log.Debug(
-            "Enter & Show page: {Page}, stackAfter={StackCount}",
+            "Enter & Show page: {0}, stackAfter={1}",
             page.GetType().Name, _stack.Count
         );
 
@@ -100,7 +100,7 @@ public partial class UiRouter : AbstractSystem, IUiRouter
 
         var top = _stack.Pop();
         _log.Debug(
-            "Pop UI Page: {Page}, policy={Policy}, stackAfterPop={StackCount}",
+            "Pop UI Page: {0}, policy={1}, stackAfterPop={2}",
             top.GetType().Name, policy, _stack.Count
         );
 
@@ -108,19 +108,19 @@ public partial class UiRouter : AbstractSystem, IUiRouter
 
         if (policy == UiPopPolicy.Destroy)
         {
-            _log.Debug("Destroy UI Page: {Page}", top.GetType().Name);
+            _log.Debug("Destroy UI Page: {0}", top.GetType().Name);
             _uiRoot.RemoveUiPage(top);
         }
         else
         {
-            _log.Debug("Hide UI Page: {Page}", top.GetType().Name);
+            _log.Debug("Hide UI Page: {0}", top.GetType().Name);
             top.OnHide();
         }
 
         if (_stack.Count > 0)
         {
             var next = _stack.Peek();
-            _log.Debug("Resume & Show page: {Page}", next.GetType().Name);
+            _log.Debug("Resume & Show page: {0}", next.GetType().Name);
             next.OnResume();
             next.OnShow();
         }
@@ -145,7 +145,7 @@ public partial class UiRouter : AbstractSystem, IUiRouter
     )
     {
         _log.Debug(
-            "Replace UI Stack with page: key={UiKey}, popPolicy={PopPolicy}, pushPolicy={PushPolicy}",
+            "Replace UI Stack with page: key={0}, popPolicy={1}, pushPolicy={2}",
             uiKey, popPolicy, pushPolicy
         );
 
@@ -162,7 +162,7 @@ public partial class UiRouter : AbstractSystem, IUiRouter
     /// </summary>
     public void Clear()
     {
-        _log.Debug("Clear UI Stack, stackCount={StackCount}", _stack.Count);
+        _log.Debug("Clear UI Stack, stackCount={0}", _stack.Count);
 
         while (_stack.Count > 0)
             Pop();
