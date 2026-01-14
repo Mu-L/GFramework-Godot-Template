@@ -1,4 +1,4 @@
-﻿using GFramework.Core.Abstractions.system;
+using GFramework.Core.Abstractions.system;
 
 namespace GFrameworkGodotTemplate.scripts.core.ui;
 
@@ -19,7 +19,7 @@ public interface IUiRouter: ISystem
     /// <param name="param">进入界面的参数，可为空</param>
     /// <param name="policy">界面切换策略，默认为Exclusive（独占）</param>
     void Push(string uiKey,IUiPageEnterParam? param=null,UiTransitionPolicy policy = UiTransitionPolicy.Exclusive);
-    
+
 
     /// <summary>
     /// 弹出路由栈顶的UI界面，返回到上一个界面
@@ -41,9 +41,22 @@ public interface IUiRouter: ISystem
         UiTransitionPolicy pushPolicy = UiTransitionPolicy.Exclusive
     );
 
-    
+
     /// <summary>
     /// 清空所有UI界面，重置路由状态
     /// </summary>
     void Clear();
+
+    /// <summary>
+    /// 注册UI切换处理器
+    /// </summary>
+    /// <param name="handler">处理器实例</param>
+    /// <param name="options">执行选项</param>
+    void RegisterHandler(IUiTransitionHandler handler, UiTransitionHandlerOptions? options = null);
+
+    /// <summary>
+    /// 注销UI切换处理器
+    /// </summary>
+    /// <param name="handler">处理器实例</param>
+    void UnregisterHandler(IUiTransitionHandler handler);
 }
