@@ -10,13 +10,13 @@ namespace GFrameworkGodotTemplate.scenes.tests.ui.main_menu;
 
 [ContextAware]
 [Log]
-public partial class TestMainMenu : Control, IController,IUiPageProvider
+public partial class TestMainMenu : Control, IController,IUiPageProvider,IUiPage
 {
     private Button Page1Button => GetNode<Button>("%Page1Button");
     private Button Page2Button => GetNode<Button>("%Page2Button");
     private Button Page3Button => GetNode<Button>("%Page3Button");
 
-    private ControlUiPageBehavior? _page;
+    private ControlPageBehaviorBehavior? _page;
     /// <summary>
     /// 节点准备就绪时的回调方法
     /// 在节点添加到场景树后调用
@@ -36,9 +36,9 @@ public partial class TestMainMenu : Control, IController,IUiPageProvider
     {
         _log.Info("测试主菜单 OnEnter");
     }
-    public IUiPage GetPage()
+    public IPageBehavior GetPage()
     {
-        _page ??= new ControlUiPageBehavior(this);
+        _page ??= new ControlPageBehaviorBehavior(this);
         return _page;
     }
 }

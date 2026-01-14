@@ -10,12 +10,12 @@ namespace GFrameworkGodotTemplate.scenes.tests.ui;
 
 [ContextAware]
 [Log]
-public partial class Page2 : Control,IController,IUiPageProvider
+public partial class Page2 : Control,IController,IUiPageProvider,IUiPage
 {
-	private ControlUiPageBehavior? _page;
-	public IUiPage GetPage()
+	private ControlPageBehaviorBehavior? _page;
+	public IPageBehavior GetPage()
 	{
-		_page ??= new ControlUiPageBehavior(this);
+		_page ??= new ControlPageBehaviorBehavior(this);
 		return _page;
 	}
 	private Button MainMenuButton=> GetNode<Button>("%MainMenuButton");

@@ -24,7 +24,7 @@ public partial class UiRouter : AbstractSystem, IUiRouter
     /// <summary>
     /// 页面栈，用于管理UI页面的显示顺序
     /// </summary>
-    private readonly Stack<IUiPage> _stack = new();
+    private readonly Stack<IPageBehavior> _stack = new();
 
     /// <summary>
     /// UI切换处理器管道

@@ -10,9 +10,9 @@ namespace GFrameworkGodotTemplate.scenes.tests.ui;
 
 [ContextAware]
 [Log]
-public partial class Page1 : Control,IController,IUiPageProvider
+public partial class Page1 : Control,IController,IUiPageProvider,IUiPage
 {
-	private ControlUiPageBehavior? _page;
+	private ControlPageBehaviorBehavior? _page;
 	private Button MainMenuButton=> GetNode<Button>("%MainMenuButton");
 	private Button Page2Button => GetNode<Button>("%Page2Button");
 	private Button Page3Button => GetNode<Button>("%Page3Button");
@@ -33,9 +33,9 @@ public partial class Page1 : Control,IController,IUiPageProvider
 	{
 		_log.Info("Page1 OnEnter");
 	}
-	public IUiPage GetPage()
+	public IPageBehavior GetPage()
 	{
-		_page ??= new ControlUiPageBehavior(this);
+		_page ??= new ControlPageBehaviorBehavior(this);
 		return _page;
 	}
 }

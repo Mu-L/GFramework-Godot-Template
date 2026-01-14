@@ -37,7 +37,7 @@ public partial class UiRoot : CanvasLayer, IUiRoot
 	/// </summary>
 	/// <param name="child">要添加的UI页面，必须实现IUiPage接口</param>
 	/// <exception cref="InvalidOperationException">当传入的child不是Godot Node类型时抛出</exception>
-	public void AddUiPage(IUiPage child)
+	public void AddUiPage(IPageBehavior child)
 	{
 		if (child.View is Node node)
 			AddChild(node);
@@ -49,7 +49,7 @@ public partial class UiRoot : CanvasLayer, IUiRoot
 	/// 从UI根节点移除UI页面
 	/// </summary>
 	/// <param name="child">要移除的UI页面，必须实现IUiPage接口</param>
-	public void RemoveUiPage(IUiPage child)
+	public void RemoveUiPage(IPageBehavior child)
 	{
 		if (child.View is Node node)
 			RemoveChild(node);

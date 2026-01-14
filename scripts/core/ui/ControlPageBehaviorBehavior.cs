@@ -7,21 +7,26 @@ namespace GFrameworkGodotTemplate.scripts.core.ui;
 /// 控制UI页面行为的类，实现了IUiPage接口，用于管理Control节点的生命周期和状态
 /// </summary>
 /// <param name="owner">拥有该行为的Control节点</param>
-public class ControlUiPageBehavior(Control owner) : IUiPage
+public class ControlPageBehaviorBehavior(Control owner) : IPageBehavior
 {
     public object View { get; } = owner;
+    private readonly IUiPage? _page = owner as IUiPage;
 
     /// <summary>
     /// 当页面进入时调用的方法
     /// </summary>
     /// <param name="param">页面进入参数，可为空</param>
-    public void OnEnter(IUiPageEnterParam? param) {}
+    public void OnEnter(IUiPageEnterParam? param)
+    {
+        _page?.OnEnter(param);
+    }
 
     /// <summary>
     /// 当页面退出时调用的方法，将所有者节点加入释放队列
     /// </summary>
     public void OnExit()
     {
+        _page?.OnExit();
         owner.QueueFreeX();
     }
 
@@ -30,6 +35,7 @@ public class ControlUiPageBehavior(Control owner) : IUiPage
     /// </summary>
     public void OnPause()
     {
+        _page?.OnPause();
         owner.SetProcess(enable: false);
         owner.SetPhysicsProcess(enable: false);
         owner.SetProcessInput(enable: false);
@@ -40,6 +46,7 @@ public class ControlUiPageBehavior(Control owner) : IUiPage
     /// </summary>
     public void OnResume()
     {
+        _page?.OnResume();
         owner.SetProcess(enable: true);
         owner.SetPhysicsProcess(enable: true);
         owner.SetProcessInput(enable: true);
@@ -50,6 +57,7 @@ public class ControlUiPageBehavior(Control owner) : IUiPage
     /// </summary>
     public void OnHide()
     {
+        _page?.OnHide();
         owner.Hide();
     }
 
@@ -58,6 +66,7 @@ public class ControlUiPageBehavior(Control owner) : IUiPage
     /// </summary>
     public void OnShow()
     {
+        _page?.OnShow();
         owner.Show();
         OnResume();
     }
