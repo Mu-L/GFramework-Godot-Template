@@ -19,7 +19,7 @@ public partial class ControlUiRoot : Control, IUiRoot
 {
 	public override void _Ready()
 	{
-		var router = this.GetSystem<ControlUiRouter>();
+		var router = this.GetSystem<IUiRouter>();
 		router!.BindRoot(this);
 		// 创建并切换到游戏主菜单状态
 		this

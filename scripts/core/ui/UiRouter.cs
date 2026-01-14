@@ -6,39 +6,38 @@ using GFramework.SourceGenerators.Abstractions.logging;
 namespace GFrameworkGodotTemplate.scripts.core.ui;
 
 /// <summary>
-/// 抽象UI路由基类，提供页面栈管理功能
+/// UI路由类，提供页面栈管理功能
 /// </summary>
-/// <typeparam name="T">UI根节点类型，必须实现IUiRoot接口</typeparam>
 [Log]
-public partial class UiRouterBase<T> : AbstractSystem, IUiRouter where T : IUiRoot
+public partial class UiRouter : AbstractSystem, IUiRouter
 {
-    protected T UiRoot = default!;
+    private IUiRoot _uiRoot = null!;
 
     /// <summary>
     /// UI工厂实例，用于创建UI相关的对象
     /// </summary>
-    protected IUiFactory Factory { get; private set; } = null!;
-
-    /// <summary>
-    /// 初始化方法，在页面初始化时获取UI工厂实例
-    /// </summary>
-    protected override void OnInit()
-    {
-        Factory = this.GetUtility<IUiFactory>()!;
-    }
+    private IUiFactory _factory= null!;
 
     /// <summary>
     /// 页面栈，用于管理UI页面的显示顺序
     /// </summary>
     private readonly Stack<IUiPage> _stack = new();
+    /// <summary>
+    /// 初始化方法，在页面初始化时获取UI工厂实例
+    /// </summary>
+    protected override void OnInit()
+    {
+        _factory = this.GetUtility<IUiFactory>()!;
+        _log.Debug("UiRouter initialized. Factory={Factory}", _factory.GetType().Name);
+    }
 
     /// <summary>
-    /// 绑定根UI组件
+    /// 绑定UI根节点
     /// </summary>
-    /// <param name="root">要绑定的根UI组件</param>
-    public void BindRoot(T root)
+    public void BindRoot(IUiRoot root)
     {
-        UiRoot = root;
+        _uiRoot = root;
+        _log.Debug("Bind UI Root: {RootType}", root.GetType().Name);
     }
 
     /// <summary>
@@ -53,18 +52,34 @@ public partial class UiRouterBase<T> : AbstractSystem, IUiRouter where T : IUiRo
         UiTransitionPolicy policy = UiTransitionPolicy.Exclusive
     )
     {
+        _log.Debug(
+            "Push UI Page: key={UiKey}, policy={Policy}, stackBefore={StackCount}",
+            uiKey, policy, _stack.Count
+        );
+
         if (_stack.Count > 0)
         {
             var current = _stack.Peek();
+            _log.Debug("Pause current page: {Page}", current.GetType().Name);
             current.OnPause();
 
             if (policy == UiTransitionPolicy.Exclusive)
+            {
+                _log.Debug("Hide current page (Exclusive): {Page}", current.GetType().Name);
                 current.OnHide();
+            }
         }
 
-        var page = Factory.Create(uiKey);
-        UiRoot.AddUiPage(page);
+        var page = _factory.Create(uiKey);
+        _log.Debug("Create UI Page instance: {Page}", page.GetType().Name);
+
+        _uiRoot.AddUiPage(page);
         _stack.Push(page);
+
+        _log.Debug(
+            "Enter & Show page: {Page}, stackAfter={StackCount}",
+            page.GetType().Name, _stack.Count
+        );
 
         page.OnEnter(param);
         page.OnShow();
@@ -77,30 +92,43 @@ public partial class UiRouterBase<T> : AbstractSystem, IUiRouter where T : IUiRo
     /// <param name="policy">弹出策略，默认为销毁策略</param>
     public void Pop(UiPopPolicy policy = UiPopPolicy.Destroy)
     {
-        if (_stack.Count == 0) return;
+        if (_stack.Count == 0)
+        {
+            _log.Debug("Pop ignored: stack is empty");
+            return;
+        }
 
         var top = _stack.Pop();
+        _log.Debug(
+            "Pop UI Page: {Page}, policy={Policy}, stackAfterPop={StackCount}",
+            top.GetType().Name, policy, _stack.Count
+        );
+
         top.OnExit();
 
-        // 根据弹出策略决定是销毁页面还是隐藏页面
         if (policy == UiPopPolicy.Destroy)
         {
-            UiRoot.RemoveUiPage(top);
+            _log.Debug("Destroy UI Page: {Page}", top.GetType().Name);
+            _uiRoot.RemoveUiPage(top);
         }
         else
         {
+            _log.Debug("Hide UI Page: {Page}", top.GetType().Name);
             top.OnHide();
         }
 
-        // 如果栈中还有页面，则将下一个页面设为当前活动页面
         if (_stack.Count > 0)
         {
             var next = _stack.Peek();
+            _log.Debug("Resume & Show page: {Page}", next.GetType().Name);
             next.OnResume();
             next.OnShow();
         }
+        else
+        {
+            _log.Debug("UI stack is now empty");
+        }
     }
-
 
     /// <summary>
     /// 替换当前所有页面为新页面
@@ -116,7 +144,11 @@ public partial class UiRouterBase<T> : AbstractSystem, IUiRouter where T : IUiRo
         UiTransitionPolicy pushPolicy = UiTransitionPolicy.Exclusive
     )
     {
-        // 清空当前页面栈中的所有页面
+        _log.Debug(
+            "Replace UI Stack with page: key={UiKey}, popPolicy={PopPolicy}, pushPolicy={PushPolicy}",
+            uiKey, popPolicy, pushPolicy
+        );
+
         while (_stack.Count > 0)
             Pop(popPolicy);
 
@@ -130,6 +162,8 @@ public partial class UiRouterBase<T> : AbstractSystem, IUiRouter where T : IUiRo
     /// </summary>
     public void Clear()
     {
+        _log.Debug("Clear UI Stack, stackCount={StackCount}", _stack.Count);
+
         while (_stack.Count > 0)
             Pop();
     }

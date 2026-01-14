@@ -8,6 +8,11 @@ namespace GFrameworkGodotTemplate.scripts.core.ui;
 public interface IUiRouter: ISystem
 {
     /// <summary>
+    /// 绑定UI根节点
+    /// </summary>
+    /// <param name="root">UI根节点接口实例</param>
+    void BindRoot(IUiRoot root);
+    /// <summary>
     /// 将指定的UI界面压入路由栈，显示新的UI界面
     /// </summary>
     /// <param name="uiKey">UI界面的唯一标识符</param>
@@ -15,6 +20,7 @@ public interface IUiRouter: ISystem
     /// <param name="policy">界面切换策略，默认为Exclusive（独占）</param>
     void Push(string uiKey,IUiPageEnterParam? param=null,UiTransitionPolicy policy = UiTransitionPolicy.Exclusive);
     
+
     /// <summary>
     /// 弹出路由栈顶的UI界面，返回到上一个界面
     /// </summary>
