@@ -1,5 +1,6 @@
 using GFramework.Core.Abstractions.architecture;
 using GFramework.Game.architecture;
+using GFramework.Game.state;
 using GFrameworkGodotTemplate.scripts.core.state;
 using GFrameworkGodotTemplate.scripts.core.state.impls;
 
@@ -18,10 +19,10 @@ public class StateModule : AbstractModule
     {
         var gameStateMachine = new GameStateMachine();
         
-        gameStateMachine.RegisterState(new MainMenuState());
-        gameStateMachine.RegisterState(new PlayingState());
-        gameStateMachine.RegisterState(new PausedState());
-        gameStateMachine.RegisterState(new GameOverState());
+        gameStateMachine.Register(new MainMenuState());
+        gameStateMachine.Register(new PlayingState());
+        gameStateMachine.Register(new PausedState());
+        gameStateMachine.Register(new GameOverState());
         
         architecture.RegisterSystem(gameStateMachine);
         

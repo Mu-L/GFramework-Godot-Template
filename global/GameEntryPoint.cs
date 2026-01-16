@@ -3,6 +3,7 @@ using GFramework.Core.Abstractions.logging;
 using GFramework.Core.Abstractions.properties;
 using GFramework.Core.architecture;
 using GFramework.Core.extensions;
+using GFramework.Game.state;
 using GFramework.Godot.logging;
 using GFramework.SourceGenerators.Abstractions.logging;
 using GFramework.SourceGenerators.Abstractions.rule;
@@ -52,7 +53,7 @@ public partial class GameEntryPoint : Node
 			{
 				// 创建并切换到游戏主菜单状态
 				this.GetSystem<GameStateMachine>()!
-					.ChangeState<MainMenuState>();
+					.ChangeTo<MainMenuState>();
 			});
 		}
 	}
