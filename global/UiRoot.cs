@@ -4,9 +4,6 @@ using GFramework.Game.Abstractions.ui;
 using GFramework.SourceGenerators.Abstractions.logging;
 using GFramework.SourceGenerators.Abstractions.rule;
 using GFrameworkGodotTemplate.scripts.core.constants;
-using GFrameworkGodotTemplate.scripts.core.state;
-using GFrameworkGodotTemplate.scripts.core.state.impls;
-using GFrameworkGodotTemplate.scripts.core.ui;
 using Godot;
 
 namespace GFrameworkGodotTemplate.global;

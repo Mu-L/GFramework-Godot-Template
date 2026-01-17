@@ -1,5 +1,6 @@
 ﻿using GFramework.Core.Abstractions.architecture;
 using GFramework.Game.architecture;
+using GFramework.Game.setting;
 
 namespace GFrameworkGodotTemplate.scripts.module;
 
@@ -14,6 +15,6 @@ public class ModelModule: AbstractModule
     /// <param name="architecture">游戏架构实例，用于注册模型</param>
     public override void Install(IArchitecture architecture)
     {
-
+        architecture.RegisterModel(new SettingsModel());
     }
 }
