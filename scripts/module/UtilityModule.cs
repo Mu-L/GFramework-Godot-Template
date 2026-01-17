@@ -1,8 +1,10 @@
 ﻿using GFramework.Core.Abstractions.architecture;
 using GFramework.Game.architecture;
+using GFramework.Game.serializer;
+using GFramework.Godot.storage;
 using GFramework.Godot.ui;
 using GFrameworkGodotTemplate.scripts.core.constants;
-using GFrameworkGodotTemplate.scripts.core.ui;
+using GFrameworkGodotTemplate.scripts.setting;
 using Godot;
 
 namespace GFrameworkGodotTemplate.scripts.module;
@@ -26,5 +28,9 @@ public class UtilityModule : AbstractModule
                 .Register(UiKeys.Page3, GD.Load<PackedScene>("res://scenes/tests/ui/page_3.tscn"))
         );
         architecture.RegisterUtility(new GodotUiFactory());
+        var jsonSerializer = new JsonSerializer();
+        architecture.RegisterUtility(jsonSerializer);
+        architecture.RegisterUtility(new GodotFileStorage(jsonSerializer));
+        architecture.RegisterUtility(new SettingsStorageUtility());
     }
 }

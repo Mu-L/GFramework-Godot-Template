@@ -1,5 +1,6 @@
 ﻿using GFramework.Core.Abstractions.architecture;
 using GFramework.Game.architecture;
+using GFramework.Game.setting;
 using GFrameworkGodotTemplate.scripts.core.ui;
 
 namespace GFrameworkGodotTemplate.scripts.module;
@@ -17,5 +18,6 @@ public class SystemModule: AbstractModule
     public override void Install(IArchitecture architecture)
     {
         architecture.RegisterSystem(new UiRouter());
+        architecture.RegisterSystem(new SettingsSystem());
     }
 }

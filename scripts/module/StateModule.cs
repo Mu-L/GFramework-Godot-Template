@@ -1,7 +1,6 @@
 using GFramework.Core.Abstractions.architecture;
 using GFramework.Game.architecture;
 using GFramework.Game.state;
-using GFrameworkGodotTemplate.scripts.core.state;
 using GFrameworkGodotTemplate.scripts.core.state.impls;
 
 namespace GFrameworkGodotTemplate.scripts.module;
@@ -18,12 +17,11 @@ public class StateModule : AbstractModule
     public override void Install(IArchitecture architecture)
     {
         var gameStateMachine = new GameStateMachine();
-        
-        gameStateMachine.Register(new MainMenuState());
-        gameStateMachine.Register(new PlayingState());
-        gameStateMachine.Register(new PausedState());
-        gameStateMachine.Register(new GameOverState());
-        
+        gameStateMachine
+            .Register(new MainMenuState())
+            .Register(new PlayingState())
+            .Register(new PausedState())
+            .Register(new GameOverState());
         architecture.RegisterSystem(gameStateMachine);
         
     }
