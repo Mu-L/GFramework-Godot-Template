@@ -1,5 +1,5 @@
 ﻿using GFramework.Core.environment;
-using GFrameworkGodotTemplate.scripts.core.constants;
+using GFrameworkGodotTemplate.scripts.constants;
 
 namespace GFrameworkGodotTemplate.scripts.core.environment;
 

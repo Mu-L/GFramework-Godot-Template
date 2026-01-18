@@ -3,7 +3,7 @@ using GFramework.Game.architecture;
 using GFramework.Game.serializer;
 using GFramework.Godot.storage;
 using GFramework.Godot.ui;
-using GFrameworkGodotTemplate.scripts.core.constants;
+using GFrameworkGodotTemplate.scripts.constants;
 using GFrameworkGodotTemplate.scripts.setting;
 using Godot;
 
