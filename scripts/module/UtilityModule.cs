@@ -1,8 +1,10 @@
 ﻿using GFramework.Core.Abstractions.architecture;
 using GFramework.Game.architecture;
 using GFramework.Game.serializer;
+using GFramework.Godot.scene;
 using GFramework.Godot.storage;
 using GFramework.Godot.ui;
+using GFrameworkGodotTemplate.scripts.data;
 using GFrameworkGodotTemplate.scripts.setting;
 
 namespace GFrameworkGodotTemplate.scripts.module;
@@ -18,10 +20,13 @@ public class UtilityModule : AbstractModule
     /// <param name="architecture">要安装模块的目标游戏架构实例</param>
     public override void Install(IArchitecture architecture)
     {
+        architecture.RegisterUtility(new GodotUiRegistry());
+        architecture.RegisterUtility(new GodotSceneRegistry());
         architecture.RegisterUtility(new GodotUiFactory());
         var jsonSerializer = new JsonSerializer();
         architecture.RegisterUtility(jsonSerializer);
         architecture.RegisterUtility(new GodotFileStorage(jsonSerializer));
         architecture.RegisterUtility(new SettingsStorageUtility());
+        architecture.RegisterUtility(new SaveStorageUtility());
     }
 }
