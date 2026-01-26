@@ -15,6 +15,7 @@ run/main_scene="uid://6s2urcdmkpbt"
 config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
 config/icon="uid://p5dak2wsc1nk"
 config/save/setting_path="user://setting.json"
+config/save/save_path="user://saves"
 
 [audio]
 
