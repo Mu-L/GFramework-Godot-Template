@@ -18,8 +18,11 @@ namespace GFrameworkGodotTemplate.scripts.data;
 /// </summary>
 public class SaveStorageUtility : AbstractContextUtility, ISaveStorageUtility
 {
-    private const string SaveFileName = "save.json";
-    private const string SaveSlotPrefix = "slot_";
+    /// <summary>
+    /// 获取存档槽位前缀配置项
+    /// </summary>
+    private static readonly string SaveSlotPrefix =
+        ProjectSettings.GetSetting("application/config/save/save_slot_prefix").AsString();
 
     /// <summary>
     /// 存档文件夹的路径，保存在用户目录下的saves文件
@@ -27,12 +30,13 @@ public class SaveStorageUtility : AbstractContextUtility, ISaveStorageUtility
     private static readonly string SaveRoot =
         ProjectSettings.GetSetting("application/config/save/save_path").AsString();
 
+
     private IStorage _rootStorage = null!;
 
     /// <summary>
     /// 获取存档文件路径
     /// </summary>
-    private static string SaveFilePath => SaveFileName;
+    private static string SaveFilePath { get; } = ProjectSettings.GetSetting("application/config/save/save_file_name").AsString();
 
     /// <summary>
     /// 检查指定槽位是否存在存档

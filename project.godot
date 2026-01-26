@@ -16,6 +16,8 @@ config/features=PackedStringArray("4.5", "C#", "GL Compatibility")
 config/icon="uid://p5dak2wsc1nk"
 config/save/setting_path="user://setting.json"
 config/save/save_path="user://saves"
+config/save/save_slot_prefix="slot_"
+config/save/save_file_name="save.json"
 
 [audio]
 
