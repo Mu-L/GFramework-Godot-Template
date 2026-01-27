@@ -12,6 +12,10 @@ using Godot;
 
 namespace GFrameworkGodotTemplate.scripts.main_menu;
 
+/// <summary>
+/// 主菜单控制器类，继承自Control并实现IController、IUiPageBehaviorProvider和ISimpleUiPage接口
+/// 负责处理主菜单界面的逻辑和生命周期管理
+/// </summary>
 [ContextAware]
 [Log]
 public partial class MainMenu :Control,IController,IUiPageBehaviorProvider,ISimpleUiPage
@@ -44,6 +48,7 @@ public partial class MainMenu :Control,IController,IUiPageBehaviorProvider,ISimp
 	private void CallDeferredInit()
 	{
 		var env = this.GetEnvironment();
+		// 在开发环境中且当前页面不在路由栈顶时，将页面推入路由栈
 		if (GameConstants.Development.Equals(env.Name, StringComparison.Ordinal) && !_uiRouter.IsTop(UiKeyStr))
 		{
 			_uiRouter.Push(GetPage());
@@ -56,12 +61,15 @@ public partial class MainMenu :Control,IController,IUiPageBehaviorProvider,ISimp
 	public override void _Ready()
 	{
 		_ = ReadyAsync();
-		CallDeferred(nameof(CallDeferredInit));
 	}
 	private async Task ReadyAsync()
 	{
+		// 等待游戏架构初始化完成
 		await GameEntryPoint.Architecture.WaitUntilReadyAsync().ConfigureAwait(false);
+		// 获取UI路由器实例
 		_uiRouter = this.GetSystem<IUiRouter>()!;
+		// 延迟调用初始化方法
+		CallDeferred(nameof(CallDeferredInit));
 	}
 	/// <summary>
 	/// 页面进入时调用的方法
