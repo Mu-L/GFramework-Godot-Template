@@ -30,7 +30,7 @@ public partial class MainMenu :Control,IController,IUiPageBehaviorProvider,ISimp
 	/// <summary>
 	///  Ui Key的字符串形式
 	/// </summary>
-	private static string UiKeyStr => nameof(UiKey.MainMenu);
+	public static string UiKeyStr => nameof(UiKey.MainMenu);
 	
 	/// <summary>
 	/// 获取页面行为实例，如果不存在则创建新的CanvasItemUiPageBehavior实例

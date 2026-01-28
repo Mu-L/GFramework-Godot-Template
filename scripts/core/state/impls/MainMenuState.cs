@@ -2,7 +2,7 @@ using GFramework.Core.Abstractions.state;
 using GFramework.Core.extensions;
 using GFramework.Core.state;
 using GFramework.Game.Abstractions.ui;
-using GFrameworkGodotTemplate.scripts.constants;
+using GFrameworkGodotTemplate.scripts.main_menu;
 
 namespace GFrameworkGodotTemplate.scripts.core.state.impls;
 
@@ -19,7 +19,7 @@ public class MainMenuState : ContextAwareStateBase
     public override void OnEnter(IState? from)
     {
         // 推送主菜单UI到界面栈中，显示主菜单界面
-        this.GetSystem<IUiRouter>()!.Push(UiKeys.MainMenu);
+        this.GetSystem<IUiRouter>()!.Push(MainMenu.UiKeyStr);
     }
 
     /// <summary>

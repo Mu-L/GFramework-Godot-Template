@@ -1,4 +1,3 @@
-using GFramework.Core.Abstractions.command;
 using GFramework.Core.command;
 using GFramework.Core.extensions;
 using GFrameworkGodotTemplate.scripts.command.audio.input;
