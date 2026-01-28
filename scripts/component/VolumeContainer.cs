@@ -10,7 +10,7 @@ namespace GFrameworkGodotTemplate.scripts.component;
 /// </summary>
 [ContextAware]
 [Log]
-public abstract partial class VolumeContainer :HBoxContainer,IController
+public partial class VolumeContainer :HBoxContainer,IController
 {
 	/// <summary>
 	/// 获取音量滑块控件
