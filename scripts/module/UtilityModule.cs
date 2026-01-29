@@ -33,7 +33,6 @@ public class UtilityModule : AbstractModule
             options: new DataRepositoryOptions
             {
                 BasePath = ProjectSettings.GetSetting("application/config/save/setting_path").AsString(),
-                KeyPrefix = "Setting",
                 AutoBackup = true,
             }));
         architecture.RegisterUtility(new SaveStorageUtility());
