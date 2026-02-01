@@ -12,7 +12,10 @@ jobs:
     name: Auto Increment Version and Create Tag
     runs-on: ubuntu-latest
     # 条件判断：仅在推送事件执行
-    if: github.event_name == 'push'
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'&&
+      contains(github.event.workflow_run.head_commit.message, '[release ci]')
     permissions:
       contents: write
     
@@ -26,23 +29,7 @@ jobs:
           fetch-depth: 0 # 获取全部历史记录以查找现有标签
           persist-credentials: false
 
-      # 步骤二：检查是否需要跳过打标签操作
-      # 根据最新提交信息决定是否继续后续流程
-      - name: Check for skip keyword
-        id: check_skip
-        run: |
-          # 检查最近一次提交信息是否包含跳过关键词
-          LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%B")
-          if [[ "$LAST_COMMIT_MSG" == *"[skip release]"* ]] || [[ "$LAST_COMMIT_MSG" == *"[no tag]"* ]]; then
-            echo "skip_tag=true" >> $GITHUB_OUTPUT
-            echo "Skipping tag creation due to skip keyword in commit message"
-          else
-            echo "skip_tag=false" >> $GITHUB_OUTPUT
-            echo "No skip keyword found, proceeding with tag creation"
-          fi
-          echo "Last commit message: $LAST_COMMIT_MSG"
-
-      # 步骤三：计算下一个版本号（若未被跳过）
+      # 步骤二：计算下一个版本号（若未被跳过）
       # 自动解析当前最新标签并递增修订号生成新的语义化版本号
       - name: Get next version
         id: get_next_version
@@ -74,7 +61,7 @@ jobs:
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
 
-      # 步骤四：创建并推送新标签到远程仓库（若未被跳过）
+      # 步骤三：创建并推送新标签到远程仓库（若未被跳过）
       # 使用个人访问令牌(PAT)进行身份验证完成推送操作
       - name: Create tag and push (using PAT)
         if: steps.check_skip.outputs.skip_tag == 'false'
@@ -93,8 +80,8 @@ jobs:
           # 推送单个 tag，使用 PAT 作为 HTTPS token
           echo "Pushing tag $NEW_TAG to origin using PAT"
           git push "https://x-access-token:${PAT}@github.com/${REPO}.git" "refs/tags/${NEW_TAG}"
-      
-      # 步骤五：输出本次成功创建的新版本相关信息（若未被跳过）
+
+      # 步骤四：输出本次成功创建的新版本相关信息（若未被跳过）
       - name: Print version info
         if: steps.check_skip.outputs.skip_tag == 'false'
         run: |
@@ -102,7 +89,7 @@ jobs:
           echo "New tag created: ${{ steps.get_next_version.outputs.new_tag }}"
           echo "Version number: ${{ steps.get_next_version.outputs.new_version }}"
 
-      # 步骤六：输出跳过原因信息（如果检测到了跳过关键字）
+      # 步骤五：输出跳过原因信息（如果检测到了跳过关键字）
       - name: Print skip info
         if: steps.check_skip.outputs.skip_tag == 'true'
         run: |
