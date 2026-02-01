@@ -1,4 +1,5 @@
 using GFramework.Core.Abstractions.architecture;
+using GFramework.Core.functional.pipe;
 using GFramework.Game.architecture;
 using GFramework.Game.state;
 using GFrameworkGodotTemplate.scripts.core.state.impls;
@@ -16,13 +17,12 @@ public class StateModule : AbstractModule
     /// <param name="architecture">游戏架构实例，用于注册状态系统</param>
     public override void Install(IArchitecture architecture)
     {
-        var gameStateMachine = new GameStateMachineSystem();
-        gameStateMachine
-            .Register(new MainMenuState())
-            .Register(new PlayingState())
-            .Register(new PausedState())
-            .Register(new GameOverState());
-        architecture.RegisterSystem(gameStateMachine);
-        
+        architecture.RegisterSystem(new GameStateMachineSystem().Also(it =>
+        {
+            it.Register(new MainMenuState())
+                .Register(new PlayingState())
+                .Register(new PausedState())
+                .Register(new GameOverState());
+        }));
     }
 }

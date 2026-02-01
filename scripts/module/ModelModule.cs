@@ -1,4 +1,5 @@
 ﻿using GFramework.Core.Abstractions.architecture;
+using GFramework.Core.functional.pipe;
 using GFramework.Game.Abstractions.data;
 using GFramework.Game.architecture;
 using GFramework.Game.setting;
@@ -20,12 +21,14 @@ public class ModelModule : AbstractModule
     public override void Install(IArchitecture architecture)
     {
         var settingsDataRepository = architecture.Context.GetUtility<ISettingsDataRepository>()!;
-        var settingsModel =
-            architecture.RegisterModel(new SettingsModel<ISettingsDataRepository>(new SettingDataLocationProvider(),settingsDataRepository));
-        settingsModel
-            .RegisterApplicator(new GodotAudioSettings(settingsModel, new AudioBusMap()))
-            .RegisterApplicator(new GodotGraphicsSettings(settingsModel))
-            .RegisterApplicator(new GodotLocalizationSettings(settingsModel, new LocalizationMap()))
-            ;
+        architecture.RegisterModel(
+            new SettingsModel<ISettingsDataRepository>(new SettingDataLocationProvider(),settingsDataRepository)
+                .Also(it =>
+                {
+                    it.RegisterApplicator(new GodotAudioSettings(it, new AudioBusMap()))
+                        .RegisterApplicator(new GodotGraphicsSettings(it))
+                        .RegisterApplicator(new GodotLocalizationSettings(it, new LocalizationMap()));
+                })
+        );
     }
 }
