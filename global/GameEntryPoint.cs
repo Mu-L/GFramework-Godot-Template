@@ -31,8 +31,8 @@ public partial class GameEntryPoint : Node
 {
     private IGodotSceneRegistry _sceneRegistry = null!;
     private ISettingsModel _settingsModel = null!;
-    private IGodotUiRegistry _uiRegistry = null!;
     private ISettingsSystem _settingsSystem = null!;
+    private IGodotUiRegistry _uiRegistry = null!;
     public static IArchitecture Architecture { get; private set; } = null!;
     [Export] public bool IsDev { get; set; } = true;
 
@@ -67,12 +67,12 @@ public partial class GameEntryPoint : Node
         }, IsDev ? new GameDevEnvironment() : new GameMainEnvironment());
         Architecture.Initialize();
         _settingsModel = this.GetModel<ISettingsModel>()!;
-        _ =_settingsModel.InitializeAsync();
+        _ = _settingsModel.InitializeAsync();
         // 监听设置初始化完成事件
         this.RegisterEvent<SettingsInitializedEvent>(e =>
         {
             _settingsSystem = this.GetSystem<ISettingsSystem>()!;
-            _= _settingsSystem.ApplyAll();
+            _ = _settingsSystem.ApplyAll();
             _log.Info("设置已加载");
         });
         _sceneRegistry = this.GetUtility<IGodotSceneRegistry>()!;
@@ -124,6 +124,6 @@ public partial class GameEntryPoint : Node
     /// </summary>
     public override void _ExitTree()
     {
-        this.SendCommand(new SaveSettingsCommand());
+        _ = this.SendCommandAsync(new SaveSettingsCommand());
     }
 }
