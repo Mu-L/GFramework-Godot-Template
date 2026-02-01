@@ -18,7 +18,6 @@ using GFrameworkGodotTemplate.scripts.command.setting.input;
 using GFrameworkGodotTemplate.scripts.component;
 using GFrameworkGodotTemplate.scripts.options_menu.events;
 using GFrameworkGodotTemplate.scripts.setting.query;
-using global::GFrameworkGodotTemplate.global;
 using Godot;
 
 namespace GFrameworkGodotTemplate.scripts.options_menu;
@@ -249,7 +248,7 @@ public partial class OptionsMenu : Control, IController
     private IEnumerator<IYieldInstruction> InitCoroutine()
     {
         Hide();
-        var eventBus = GameEntryPoint.Architecture.Context.GetService<IEventBus>()!;
+        var eventBus = this.GetService<IEventBus>()!;
         yield return new WaitForEvent<SettingsInitializedEvent>(eventBus);
 
         InitializeUi();
