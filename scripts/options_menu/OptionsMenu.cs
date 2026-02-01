@@ -118,13 +118,7 @@ public partial class OptionsMenu : Control, IController
 		MasterVolume.Initialize("主音量", audioSettings.MasterVolume);
 		BgmVolume.Initialize("音乐音量", audioSettings.BgmVolume);
 		SfxVolume.Initialize("音效音量", audioSettings.SfxVolume);
-		// 初始化分辨率选项
-		ResolutionOptionButton.Clear();
-		foreach (var resolution in _resolutions)
-		{
-			ResolutionOptionButton.AddItem($"{resolution.X}x{resolution.Y}");
-		}
-
+		
 		var graphicsSettings = view.Graphics;
 		ResolutionOptionButton.Disabled = graphicsSettings.Fullscreen;
 		
@@ -133,6 +127,8 @@ public partial class OptionsMenu : Control, IController
 		FullscreenOptionButton.AddItem("全屏");
 		FullscreenOptionButton.AddItem("窗口化");
 		FullscreenOptionButton.Selected = graphicsSettings.Fullscreen ? 0 : 1;
+		// 初始化分辨率选项
+		ResolutionOptionButton.Clear();
 		for (var i = 0; i < _resolutions.Length; i++)
 		{
 			var r = _resolutions[i];
