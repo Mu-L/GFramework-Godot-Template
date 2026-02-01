@@ -53,6 +53,6 @@ jobs:
       # 恢复.NET本地工具
       - name: Restore .NET tools
         run: dotnet tool restore
-      # 构建项目，使用Release配置且跳过恢复步骤
-      - name: Build
-        run: dotnet build -c Release --no-restore -p:NoBuild=true
+      # Godot 项目通常使用 Debug 或 ExportDebug/ExportRelease 配置
+      - name: Build C# Project
+        run: dotnet build --no-restore
