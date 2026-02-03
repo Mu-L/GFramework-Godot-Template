@@ -4,6 +4,7 @@ using GFramework.Core.Abstractions.events;
 using GFramework.Core.coroutine.extensions;
 using GFramework.Core.coroutine.instructions;
 using GFramework.Core.extensions;
+using GFramework.Game.Abstractions.enums;
 using GFramework.Game.Abstractions.ui;
 using GFramework.Game.setting.events;
 using GFramework.Godot.coroutine;
@@ -21,7 +22,6 @@ using GFrameworkGodotTemplate.scripts.component;
 using GFrameworkGodotTemplate.scripts.constants;
 using GFrameworkGodotTemplate.scripts.core.ui;
 using GFrameworkGodotTemplate.scripts.enums.ui;
-using GFrameworkGodotTemplate.scripts.options_menu.events;
 using GFrameworkGodotTemplate.scripts.setting.query;
 using global::GFrameworkGodotTemplate.global;
 using Godot;
@@ -115,7 +115,12 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
         // 在开发环境中且当前页面不在路由栈顶时，将页面推入路由栈
         if (GameConstants.Development.Equals(env.Name, StringComparison.Ordinal) && !_uiRouter.IsTop(UiKeyStr))
         {
-            _uiRouter.Push(GetPage());
+            _uiRouter.Show(
+                UiKeyStr,
+                UiLayer.Modal,
+                param: null,
+                instancePolicy: UiInstancePolicy.Reuse
+            );
         }
 
         InitCoroutine().RunCoroutine();
@@ -323,8 +328,7 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
             .Then(() =>
             {
                 _log.Info("设置已保存");
-                _uiRouter.Pop();
-                this.SendEvent<CloseOptionsMenuEvent>();
+                _uiRouter.Hide(UiKeyStr, UiLayer.Modal);
             });
     }
 }
