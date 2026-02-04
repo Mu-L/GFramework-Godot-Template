@@ -1,5 +1,6 @@
 using GFramework.Core.Abstractions.controller;
 using GFramework.Core.extensions;
+using GFramework.Game.Abstractions.enums;
 using GFramework.Game.Abstractions.ui;
 using GFramework.Godot.ui;
 using GFramework.SourceGenerators.Abstractions.logging;
@@ -10,6 +11,7 @@ using GFrameworkGodotTemplate.scripts.constants;
 using GFrameworkGodotTemplate.scripts.core.ui;
 using GFrameworkGodotTemplate.scripts.credits;
 using GFrameworkGodotTemplate.scripts.enums.ui;
+using GFrameworkGodotTemplate.scripts.options_menu;
 using global::GFrameworkGodotTemplate.global;
 using Godot;
 
@@ -93,5 +95,6 @@ public partial class MainMenu : Control, IController, IUiPageBehaviorProvider, I
         };
         // 绑定制作组按钮点击事件
         CreditsButton.Pressed += () => { _uiRouter.Push(Credits.UiKeyStr); };
+        OptionsMenuButton.Pressed += () => { _uiRouter.Show(OptionsMenu.UiKeyStr, UiLayer.Modal, param: null); };
     }
 }

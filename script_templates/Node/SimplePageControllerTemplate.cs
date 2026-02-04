@@ -44,12 +44,6 @@ public partial class _CLASS_ :_BASE_,IController,IUiPageBehaviorProvider,ISimple
     /// </summary>
     private void CallDeferredInit()
     {
-        var env = this.GetEnvironment();
-        // 开发环境下检查当前UI是否在路由栈顶，如果不在则将页面推入路由栈
-        if (GameConstants.Development.Equals(env.Name, StringComparison.Ordinal) && !_uiRouter.IsTop(UiKeyStr))
-        {
-            _uiRouter.Push(GetPage());
-        }
         // 在此添加延迟初始化逻辑
     }
     /// <summary>
@@ -69,8 +63,15 @@ public partial class _CLASS_ :_BASE_,IController,IUiPageBehaviorProvider,ISimple
         _uiRouter = this.GetSystem<IUiRouter>()!;
         
         // 在此添加就绪逻辑
-        
+        SetupEventHandlers();
         // 这个需要延迟调用，因为UiRoot还没有添加到场景树中
         CallDeferred(nameof(CallDeferredInit));
+    }
+    /// <summary>
+    /// 设置事件处理器
+    /// </summary>
+    private void SetupEventHandlers()
+    {
+        
     }
 }

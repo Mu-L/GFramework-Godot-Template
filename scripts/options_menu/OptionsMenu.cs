@@ -5,6 +5,7 @@ using GFramework.Core.coroutine.extensions;
 using GFramework.Core.coroutine.instructions;
 using GFramework.Core.extensions;
 using GFramework.Game.Abstractions.enums;
+using GFramework.Game.Abstractions.setting;
 using GFramework.Game.Abstractions.ui;
 using GFramework.Game.setting.events;
 using GFramework.Godot.coroutine;
@@ -302,9 +303,13 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     private IEnumerator<IYieldInstruction> InitCoroutine()
     {
         Hide();
+        var settings = this.GetModel<ISettingsModel>()!;
         var eventBus = this.GetService<IEventBus>()!;
-        // 等待设置初始化事件完成
-        yield return new WaitForEvent<SettingsInitializedEvent>(eventBus);
+        if (!settings.IsInitialized)
+        {
+            // 等待设置初始化事件完成
+            yield return new WaitForEvent<SettingsInitializedEvent>(eventBus);
+        }
 
         InitializeUi();
         Show();
@@ -323,7 +328,7 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
             .Then(() =>
             {
                 _log.Info("设置已保存");
-                _uiRouter.Hide(UiKeyStr, UiLayer.Modal);
+                _uiRouter.Hide(UiKeyStr, UiLayer.Modal, destroy: true);
             });
     }
 }
