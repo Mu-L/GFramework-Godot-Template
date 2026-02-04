@@ -20,7 +20,6 @@ using GFrameworkGodotTemplate.scripts.command.graphics.input;
 using GFrameworkGodotTemplate.scripts.command.setting;
 using GFrameworkGodotTemplate.scripts.command.setting.input;
 using GFrameworkGodotTemplate.scripts.component;
-using GFrameworkGodotTemplate.scripts.constants;
 using GFrameworkGodotTemplate.scripts.core.ui;
 using GFrameworkGodotTemplate.scripts.enums.ui;
 using GFrameworkGodotTemplate.scripts.setting.query;
@@ -112,13 +111,6 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     /// </summary>
     private void CallDeferredInit()
     {
-        var env = this.GetEnvironment();
-        // 在开发环境中且当前页面不在路由栈顶时，将页面推入路由栈
-        if (GameConstants.Development.Equals(env.Name, StringComparison.Ordinal) && !_uiRouter.IsTop(UiKeyStr))
-        {
-            _uiRouter.Show(GetPage(), UiLayer.Modal);
-        }
-
         InitCoroutine().RunCoroutine();
     }
 
