@@ -30,4 +30,12 @@ public enum UiKey
     /// 表示选项菜单相关的界面状态或操作类型
     /// </remarks>
     OptionsMenu,
+
+    /// <summary>
+    /// 版权信息界面键值
+    /// </summary>
+    /// <remarks>
+    /// 表示显示版权信息的界面状态或操作类型
+    /// </remarks>
+    Credits,
 }

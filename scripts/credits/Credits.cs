@@ -1,6 +1,3 @@
-﻿// meta-name: 简单UI页面控制器类模板
-// meta-description: 负责管理UI页面场景的生命周期和架构关联
-using Godot;
 using GFramework.Core.Abstractions.controller;
 using GFramework.Core.extensions;
 using GFramework.Game.Abstractions.ui;
@@ -10,35 +7,39 @@ using GFramework.SourceGenerators.Abstractions.rule;
 using GFrameworkGodotTemplate.scripts.constants;
 using GFrameworkGodotTemplate.scripts.core.ui;
 using GFrameworkGodotTemplate.scripts.enums.ui;
-using GFrameworkGodotTemplate.global;
+using global::GFrameworkGodotTemplate.global;
+using Godot;
 
+namespace GFrameworkGodotTemplate.scripts.credits;
 
 [ContextAware]
 [Log]
-public partial class _CLASS_ :_BASE_,IController,IUiPageBehaviorProvider,ISimpleUiPage
+public partial class Credits : Control, IController, IUiPageBehaviorProvider, ISimpleUiPage
 {
-	/// <summary>
+    /// <summary>
     /// 页面行为实例的私有字段
     /// </summary>
-	private IUiPageBehavior? _page;
-    
+    private IUiPageBehavior? _page;
+
     private IUiRouter _uiRouter = null!;
-    
+
+    private Button BackButton => GetNode<Button>("%BackButton");
+
     /// <summary>
     ///  Ui Key的字符串形式
     /// </summary>
-    public static string UiKeyStr => nameof(UiKey._CLASS_);
-    
+    public static string UiKeyStr => nameof(UiKey.Credits);
+
     /// <summary>
     /// 获取页面行为实例，如果不存在则创建新的CanvasItemUiPageBehavior实例
     /// </summary>
     /// <returns>返回IUiPageBehavior类型的页面行为实例</returns>
     public IUiPageBehavior GetPage()
     {
-        _page ??= new CanvasItemUiPageBehavior<_BASE_>(this,UiKeyStr);
+        _page ??= new CanvasItemUiPageBehavior<Control>(this, UiKeyStr);
         return _page;
     }
-	
+
     /// <summary>
     /// 检查当前UI是否在路由栈顶，如果不在则将页面推入路由栈
     /// </summary>
@@ -52,6 +53,7 @@ public partial class _CLASS_ :_BASE_,IController,IUiPageBehaviorProvider,ISimple
         }
         // 在此添加延迟初始化逻辑
     }
+
     /// <summary>
     /// 节点准备就绪时的回调方法
     /// 在节点添加到场景树后调用
@@ -60,6 +62,7 @@ public partial class _CLASS_ :_BASE_,IController,IUiPageBehaviorProvider,ISimple
     {
         _ = ReadyAsync();
     }
+
     /// <summary>
     /// 异步等待架构准备完成并获取UI路由器系统
     /// </summary>
@@ -67,10 +70,20 @@ public partial class _CLASS_ :_BASE_,IController,IUiPageBehaviorProvider,ISimple
     {
         await GameEntryPoint.Architecture.WaitUntilReadyAsync().ConfigureAwait(false);
         _uiRouter = this.GetSystem<IUiRouter>()!;
-        
+
         // 在此添加就绪逻辑
-        
+        SetupEventHandlers();
         // 这个需要延迟调用，因为UiRoot还没有添加到场景树中
         CallDeferred(nameof(CallDeferredInit));
+    }
+
+    private void SetupEventHandlers()
+    {
+        BackButton.Pressed += OnBackButton;
+    }
+
+    private void OnBackButton()
+    {
+        _uiRouter.Pop();
     }
 }

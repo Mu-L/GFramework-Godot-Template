@@ -8,6 +8,7 @@ using GFrameworkGodotTemplate.scripts.command.game;
 using GFrameworkGodotTemplate.scripts.command.game.input;
 using GFrameworkGodotTemplate.scripts.constants;
 using GFrameworkGodotTemplate.scripts.core.ui;
+using GFrameworkGodotTemplate.scripts.credits;
 using GFrameworkGodotTemplate.scripts.enums.ui;
 using global::GFrameworkGodotTemplate.global;
 using Godot;
@@ -78,12 +79,19 @@ public partial class MainMenu : Control, IController, IUiPageBehaviorProvider, I
         await GameEntryPoint.Architecture.WaitUntilReadyAsync().ConfigureAwait(false);
         // 获取UI路由器实例
         _uiRouter = this.GetSystem<IUiRouter>()!;
+        SetupEventHandlers();
+        // 延迟调用初始化方法
+        CallDeferred(nameof(CallDeferredInit));
+    }
+
+    private void SetupEventHandlers()
+    {
         // 绑定退出游戏按钮点击事件
         ExitButton.Pressed += () =>
         {
             this.SendCommand(new ExitGameCommand(new ExitGameCommandInput { Node = this }));
         };
-        // 延迟调用初始化方法
-        CallDeferred(nameof(CallDeferredInit));
+        // 绑定制作组按钮点击事件
+        CreditsButton.Pressed += () => { _uiRouter.Push(Credits.UiKeyStr); };
     }
 }

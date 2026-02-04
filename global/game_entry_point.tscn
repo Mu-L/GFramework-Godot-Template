@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://dngneq20rrrn4" path="res://scenes/options_menu/options_menu.tscn" id="4_3xsct"]
 [ext_resource type="PackedScene" uid="uid://6s2urcdmkpbt" path="res://scenes/main.tscn" id="4_pn3ws"]
 [ext_resource type="Script" uid="uid://5mfgbvaive07" path="res://scripts/core/resource/GameSceneConfig.cs" id="5_3xsct"]
+[ext_resource type="PackedScene" uid="uid://b3oc5caltregr" path="res://scenes/credits/credits.tscn" id="5_7mti7"]
 
 [sub_resource type="Resource" id="Resource_pn3ws"]
 script = ExtResource("3_x37g7")
@@ -18,6 +19,12 @@ UiKey = 3
 Scene = ExtResource("4_3xsct")
 metadata/_custom_type_script = "uid://cowpnmhamgtd3"
 
+[sub_resource type="Resource" id="Resource_inr81"]
+script = ExtResource("3_x37g7")
+UiKey = 4
+Scene = ExtResource("5_7mti7")
+metadata/_custom_type_script = "uid://cowpnmhamgtd3"
+
 [sub_resource type="Resource" id="Resource_7mti7"]
 script = ExtResource("5_3xsct")
 SceneKey = 1
@@ -26,5 +33,5 @@ metadata/_custom_type_script = "uid://5mfgbvaive07"
 
 [node name="GameEntryPoint" type="Node" unique_id=729277825]
 script = ExtResource("1_a14y6")
-UiPageConfigs = Array[Object]([SubResource("Resource_pn3ws"), SubResource("Resource_f22d5")])
+UiPageConfigs = Array[Object]([SubResource("Resource_pn3ws"), SubResource("Resource_f22d5"), SubResource("Resource_inr81")])
 GameSceneConfigs = Array[Object]([SubResource("Resource_7mti7")])
