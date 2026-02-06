@@ -107,8 +107,7 @@ public partial class PauseMenu : Control, IController, IUiPageBehaviorProvider, 
         // 绑定返回主菜单按钮点击事件
         MainMenuButton.Pressed += () =>
         {
-            this.SendCommand(new ResumeGameWithClosePauseMenuCommand(
-            ));
+            this.SendCommand(new ResumeGameWithClosePauseMenuCommand());
             _stateMachineSystem.ChangeTo<MainMenuState>();
         };
 

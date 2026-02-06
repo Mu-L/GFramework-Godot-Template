@@ -1,6 +1,7 @@
 using GFramework.Core.extensions;
 using GFramework.Game.Abstractions.enums;
 using GFramework.Game.Abstractions.ui;
+using GFramework.Godot.extensions;
 using GFramework.SourceGenerators.Abstractions.logging;
 using GFramework.SourceGenerators.Abstractions.rule;
 using GFrameworkGodotTemplate.scripts.constants;
@@ -73,7 +74,7 @@ public partial class UiRoot : CanvasLayer, IUiRoot
 
         node.GetParent()?.RemoveChild(node);
         _pages.Remove(child);
-
+        node.QueueFreeX();
         _log.Debug($"Remove UI [{child.Key}]");
     }
 
@@ -103,7 +104,7 @@ public partial class UiRoot : CanvasLayer, IUiRoot
     public IReadOnlyList<IUiPageBehavior> GetVisiblePages()
     {
         return _pages
-            .Where(p => p.View is CanvasItem item && item.Visible)
+            .Where(p => p.View is CanvasItem { Visible: true })
             .ToList();
     }
 
