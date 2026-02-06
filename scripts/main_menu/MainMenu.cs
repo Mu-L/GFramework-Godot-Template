@@ -1,18 +1,17 @@
 using GFramework.Core.Abstractions.controller;
 using GFramework.Core.Abstractions.state;
 using GFramework.Core.extensions;
-using GFramework.Game.Abstractions.enums;
 using GFramework.Game.Abstractions.ui;
 using GFramework.Godot.ui;
 using GFramework.SourceGenerators.Abstractions.logging;
 using GFramework.SourceGenerators.Abstractions.rule;
 using GFrameworkGodotTemplate.scripts.command.game;
 using GFrameworkGodotTemplate.scripts.command.game.input;
+using GFrameworkGodotTemplate.scripts.command.menu;
 using GFrameworkGodotTemplate.scripts.core.state.impls;
 using GFrameworkGodotTemplate.scripts.core.ui;
 using GFrameworkGodotTemplate.scripts.credits;
 using GFrameworkGodotTemplate.scripts.enums.ui;
-using GFrameworkGodotTemplate.scripts.options_menu;
 using global::GFrameworkGodotTemplate.global;
 using Godot;
 
@@ -56,13 +55,6 @@ public partial class MainMenu : Control, IController, IUiPageBehaviorProvider, I
     }
 
     /// <summary>
-    /// 检查当前UI是否在路由栈顶，如果不在则将页面推入路由栈
-    /// </summary>
-    private void CallDeferredInit()
-    {
-    }
-
-    /// <summary>
     /// 节点准备就绪时的回调方法
     /// 在节点添加到场景树后调用
     /// </summary>
@@ -79,20 +71,15 @@ public partial class MainMenu : Control, IController, IUiPageBehaviorProvider, I
         _uiRouter = this.GetSystem<IUiRouter>()!;
         _stateMachineSystem = this.GetSystem<IStateMachineSystem>()!;
         SetupEventHandlers();
-        // 延迟调用初始化方法
-        CallDeferred(nameof(CallDeferredInit));
     }
 
     private void SetupEventHandlers()
     {
         // 绑定退出游戏按钮点击事件
-        ExitButton.Pressed += () =>
-        {
-            this.SendCommand(new ExitGameCommand(new ExitGameCommandInput { Node = this }));
-        };
+        ExitButton.Pressed += () => this.SendCommand(new ExitGameCommand(new ExitGameCommandInput { Node = this }));
         // 绑定制作组按钮点击事件
         CreditsButton.Pressed += () => { _uiRouter.Push(Credits.UiKeyStr); };
-        OptionsMenuButton.Pressed += () => { _uiRouter.Show(OptionsMenu.UiKeyStr, UiLayer.Modal, param: null); };
+        OptionsMenuButton.Pressed += () => { this.SendCommand(new OpenOptionsMenuCommand()); };
         NewGameButton.Pressed += () => { _stateMachineSystem.ChangeTo<PlayingState>(); };
     }
 }

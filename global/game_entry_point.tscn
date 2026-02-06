@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://ctw1uutwq5msk" path="res://scenes/test/home_ui.tscn" id="6_iiepj"]
 [ext_resource type="PackedScene" uid="uid://dyrf2o3rqfqic" path="res://scenes/test/scene_1.tscn" id="6_inr81"]
 [ext_resource type="Script" uid="uid://5mfgbvaive07" path="res://scripts/core/resource/SceneConfig.cs" id="7_iiepj"]
+[ext_resource type="PackedScene" uid="uid://bkpda73hbmyix" path="res://scenes/pause_menu/pause_menu.tscn" id="7_iumd8"]
 [ext_resource type="PackedScene" uid="uid://b1vjila6v2iyw" path="res://scenes/test/scene_2.tscn" id="8_rtbxk"]
 [ext_resource type="PackedScene" uid="uid://fb017woaakjg" path="res://scenes/test/home.tscn" id="9_iumd8"]
 
@@ -33,6 +34,12 @@ metadata/_custom_type_script = "uid://cowpnmhamgtd3"
 script = ExtResource("3_x37g7")
 UiKey = 5
 Scene = ExtResource("6_iiepj")
+metadata/_custom_type_script = "uid://cowpnmhamgtd3"
+
+[sub_resource type="Resource" id="Resource_d4hg6"]
+script = ExtResource("3_x37g7")
+UiKey = 6
+Scene = ExtResource("7_iumd8")
 metadata/_custom_type_script = "uid://cowpnmhamgtd3"
 
 [sub_resource type="Resource" id="Resource_1yddw"]
@@ -61,5 +68,5 @@ metadata/_custom_type_script = "uid://5mfgbvaive07"
 
 [node name="GameEntryPoint" type="Node" unique_id=729277825]
 script = ExtResource("1_a14y6")
-UiPageConfigs = Array[Object]([SubResource("Resource_pn3ws"), SubResource("Resource_f22d5"), SubResource("Resource_inr81"), SubResource("Resource_rtbxk")])
+UiPageConfigs = Array[Object]([SubResource("Resource_pn3ws"), SubResource("Resource_f22d5"), SubResource("Resource_inr81"), SubResource("Resource_rtbxk"), SubResource("Resource_d4hg6")])
 GameSceneConfigs = Array[Object]([SubResource("Resource_1yddw"), SubResource("Resource_fgqit"), SubResource("Resource_hjx06"), SubResource("Resource_iumd8")])

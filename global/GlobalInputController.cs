@@ -1,13 +1,11 @@
 using GFramework.Core.Abstractions.state;
 using GFramework.Core.extensions;
-using GFramework.Game.Abstractions.ui;
 using GFramework.SourceGenerators.Abstractions.logging;
 using GFramework.SourceGenerators.Abstractions.rule;
 using GFrameworkGodotTemplate.scripts.command.game;
 using GFrameworkGodotTemplate.scripts.command.game.input;
 using GFrameworkGodotTemplate.scripts.core.controller;
 using GFrameworkGodotTemplate.scripts.core.state.impls;
-using GFrameworkGodotTemplate.scripts.events.menu;
 using Godot;
 
 namespace GFrameworkGodotTemplate.global;
@@ -17,7 +15,6 @@ namespace GFrameworkGodotTemplate.global;
 public partial class GlobalInputController : GameInputController
 {
     private IStateMachineSystem _stateMachineSystem = null!;
-    private IUiRouter _uiRouter = null!;
 
     /// <summary>
     /// 节点准备就绪时的回调方法
@@ -26,7 +23,6 @@ public partial class GlobalInputController : GameInputController
     public override void _Ready()
     {
         _stateMachineSystem = this.GetSystem<IStateMachineSystem>()!;
-        _uiRouter = this.GetSystem<IUiRouter>()!;
     }
 
     /// <summary>
@@ -43,19 +39,18 @@ public partial class GlobalInputController : GameInputController
 
         var current = _stateMachineSystem.Current;
 
-        if (current is PausedState)
+        switch (current)
         {
-            _log.Debug("恢复游戏");
-            this.SendEvent<ClosePauseMenuEvent>();
-            this.SendCommand(new ResumeGameCommand(
-                new ResumeGameCommandInput { Node = this }));
-        }
-        else if (current is PlayingState)
-        {
-            _log.Debug("暂停游戏");
-            this.SendCommand(new PauseGameCommand(
-                new PauseGameCommandInput { Node = this }));
-            this.SendEvent<OpenPauseMenuEvent>();
+            case PausedState:
+                _log.Debug("恢复游戏");
+                this.SendCommand(new ResumeGameWithClosePauseMenuCommand(
+                    new ResumeGameCommandInput { Node = this }));
+                break;
+            case PlayingState:
+                _log.Debug("暂停游戏");
+                this.SendCommand(new PauseGameWithOpenPauseMenuCommand(
+                    new PauseGameCommandInput { Node = this }));
+                break;
         }
     }
 }
