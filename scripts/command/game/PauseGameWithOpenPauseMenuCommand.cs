@@ -41,6 +41,6 @@ public class PauseGameWithOpenPauseMenuCommand(PauseGameCommandInput input)
         this.SendCommand(new PauseGameCommand(input));
 
         // 发送打开选项菜单命令
-        this.SendCommand(new OpenOptionsMenuCommand());
+        this.SendCommand(new OpenPauseMenuCommand());
     }
 }
