@@ -1,4 +1,5 @@
 using GFramework.Core.Abstractions.state;
+using GFramework.Core.extensions;
 using GFramework.Game.Abstractions.ui;
 using GFramework.SourceGenerators.Abstractions.logging;
 using GFramework.SourceGenerators.Abstractions.rule;
