@@ -154,7 +154,7 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     /// </summary>
     private void OnBackPressed()
     {
-        SaveCommandCoroutine().RunCoroutine();
+        SaveCommandCoroutine().RunCoroutine(Segment.ProcessIgnorePause);
     }
 
     /// <summary>
