@@ -22,6 +22,7 @@ config/save/setting_path="user://"
 config/save/save_path="user://saves"
 config/save/save_slot_prefix="slot_"
 config/save/save_file_name="save.json"
+config/tags=PackedStringArray("gamelab")
 
 [audio]
 

@@ -18,6 +18,7 @@ using GFrameworkGodotTemplate.scripts.core.environment;
 using GFrameworkGodotTemplate.scripts.core.resource;
 using GFrameworkGodotTemplate.scripts.core.state.impls;
 using GFrameworkGodotTemplate.scripts.enums.scene;
+using GFrameworkGodotTemplate.scripts.utility;
 using Godot;
 using Godot.Collections;
 
@@ -33,6 +34,7 @@ public partial class GameEntryPoint : Node
     private IGodotSceneRegistry _sceneRegistry = null!;
     private ISettingsModel _settingsModel = null!;
     private ISettingsSystem _settingsSystem = null!;
+    private IGodotTextureRegistry _textureRegistry = null!;
     private IGodotUiRegistry _uiRegistry = null!;
     public static IArchitecture Architecture { get; private set; } = null!;
     public static SceneTree Tree { get; private set; } = null!;
@@ -48,6 +50,8 @@ public partial class GameEntryPoint : Node
     public Array<UiPageConfig> UiPageConfigs { get; set; } = null!;
 
     [Export] public Array<SceneConfig> GameSceneConfigs { get; set; } = null!;
+
+    [Export] public Array<TextureConfig> TextureConfigs { get; set; } = null!;
 
     /// <summary>
     ///     Godot引擎调用的节点就绪方法，在此方法中初始化游戏架构和相关组件
@@ -81,18 +85,22 @@ public partial class GameEntryPoint : Node
         });
         _sceneRegistry = this.GetUtility<IGodotSceneRegistry>()!;
         _uiRegistry = this.GetUtility<IGodotUiRegistry>()!;
+        _textureRegistry = this.GetUtility<IGodotTextureRegistry>()!;
         // 注册所有游戏场景配置到场景注册表中
         foreach (var gameSceneConfig in GameSceneConfigs) _sceneRegistry.Registry(gameSceneConfig);
 
         // 注册所有UI页面配置到UI注册表中
         foreach (var uiPageConfig in UiPageConfigs) _uiRegistry.Registry(uiPageConfig);
 
+        // 注册所有纹理配置
+        foreach (var textureConfig in TextureConfigs) _textureRegistry.Registry(textureConfig);
+
         // 检查是否应该进入主菜单状态，如果是则注册UI根节点就绪事件来切换到主菜单状态
         if (ShouldEnterMainMenu())
             this.RegisterEvent<UiRoot.UiRootReadyEvent>(_ =>
             {
                 this.GetSystem<IStateMachineSystem>()!
-                    .ChangeTo<MainMenuState>();
+                    .ChangeTo<BootStartState>();
             });
 
         _log.Debug("GameEntryPoint ready.");

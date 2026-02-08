@@ -7,6 +7,7 @@ using GFramework.Godot.scene;
 using GFramework.Godot.storage;
 using GFramework.Godot.ui;
 using GFrameworkGodotTemplate.scripts.data;
+using GFrameworkGodotTemplate.scripts.utility;
 using Godot;
 
 namespace GFrameworkGodotTemplate.scripts.module;
@@ -24,6 +25,7 @@ public class UtilityModule : AbstractModule
     {
         architecture.RegisterUtility(new GodotUiRegistry());
         architecture.RegisterUtility(new GodotSceneRegistry());
+        architecture.RegisterUtility(new GodotTextureRegistry());
         architecture.RegisterUtility(new GodotUiFactory());
         var jsonSerializer = new JsonSerializer();
         architecture.RegisterUtility(jsonSerializer);
