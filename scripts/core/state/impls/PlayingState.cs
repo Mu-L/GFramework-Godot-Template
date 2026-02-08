@@ -1,7 +1,6 @@
 using GFramework.Core.Abstractions.state;
 using GFramework.Core.extensions;
 using GFramework.Core.state;
-using GFramework.Game.Abstractions.scene;
 using GFramework.Game.Abstractions.ui;
 using GFrameworkGodotTemplate.scripts.tests;
 
@@ -23,16 +22,5 @@ public class PlayingState : ContextAwareStateBase
     {
         // 获取UI路由系统并替换当前UI为HomeUi
         this.GetSystem<IUiRouter>()!.Replace(HomeUi.UiKeyStr);
-    }
-
-    /// <summary>
-    /// 退出当前状态时调用的方法。
-    /// 卸载当前场景资源。
-    /// </summary>
-    /// <param name="to">即将进入的下一个状态实例，可能为null。</param>
-    public override void OnExit(IState? to)
-    {
-        // 获取场景路由系统并卸载当前场景
-        this.GetSystem<ISceneRouter>()!.Unload();
     }
 }
