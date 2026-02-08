@@ -17,6 +17,8 @@ namespace GFrameworkGodotTemplate.global;
 [Log]
 public partial class SceneTransitionManager : Node, IController
 {
+    private static readonly string Progress = "progress";
+
     /// <summary>
     /// 过渡效果使用的着色器材质。
     /// </summary>
@@ -60,41 +62,48 @@ public partial class SceneTransitionManager : Node, IController
     {
         IsTransitioning = true;
 
-        // 1. 先截图旧画面
-        var captureInstruction = CaptureScreenshot().AsCoroutineInstruction();
-        yield return captureInstruction;
-        var fromTexture = captureInstruction.Result;
+        // 1. 截图当前画面
+        var captureFromInstruction = CaptureScreenshot().AsCoroutineInstruction();
+        yield return captureFromInstruction;
+        var fromTexture = captureFromInstruction.Result;
 
-        // 重要：先设置纹理，再显示 ColorRect
-        _material.SetShaderParameter("from_tex", fromTexture);
-        _material.SetShaderParameter("progress", 0.0f);
-        SceneTransitionRect.Visible = true;
+        _log.Debug($"捕获旧画面: {fromTexture.GetWidth()}x{fromTexture.GetHeight()}");
 
-        // 等待一帧确保显示
-        yield return new WaitOneFrame();
-
-        // 2. 前半段动画（0 → 0.5，六边形遮盖旧画面）
-        yield return TweenProgress(0f, 0.5f, duration * 0.5f).AsCoroutineInstruction();
-
-        // 3. 执行实际切换（场景/UI）
+        // 2. 执行场景切换
         yield return new WaitForCoroutine(onSwitch);
 
-        // 4. 等待一帧让新场景渲染
+        // 3. 等待新场景渲染
+        yield return new WaitOneFrame();
         yield return new WaitOneFrame();
 
-        // 5. 截图新画面
-        var toTextureInstruction = CaptureScreenshot().AsCoroutineInstruction();
-        yield return toTextureInstruction;
-        var toTexture = toTextureInstruction.Result;
+        // 4. 截图新画面
+        var captureToInstruction = CaptureScreenshot().AsCoroutineInstruction();
+        yield return captureToInstruction;
+        var toTexture = captureToInstruction.Result;
+
+        _log.Debug($"捕获新画面: {toTexture.GetWidth()}x{toTexture.GetHeight()}");
+
+        // 5. 设置纹理
+        _material.SetShaderParameter("from_tex", fromTexture);
         _material.SetShaderParameter("to_tex", toTexture);
+        _material.SetShaderParameter(Progress, 0.0f);
 
-        // 6. 后半段动画（0.5 → 1.0，显示新画面）
-        yield return TweenProgress(0.5f, 1f, duration * 0.5f).AsCoroutineInstruction();
+        // 6. 显示过渡层
+        SceneTransitionRect.Visible = true;
 
-        // 7. 清理
+        // 等待一帧
+        yield return new WaitOneFrame();
+
+        // 7. 使用协程版本的进度更新
+        yield return new WaitForCoroutine(TweenProgressCoroutine(0f, 1f, duration));
+
+        // 8. 清理
         SceneTransitionRect.Visible = false;
+        _material.SetShaderParameter(Progress, 0.0f);
+
         fromTexture.Dispose();
         toTexture.Dispose();
+
         IsTransitioning = false;
     }
 
@@ -103,13 +112,20 @@ public partial class SceneTransitionManager : Node, IController
     /// </summary>
     private async Task<ImageTexture> CaptureScreenshot()
     {
+        // 临时隐藏过渡层，避免截图包含它
+        var wasVisible = SceneTransitionRect.Visible;
+        SceneTransitionRect.Visible = false;
+
         // 等待渲染完成
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
 
         // 获取视口的纹理
         var viewport = GetViewport();
         var image = viewport.GetTexture().GetImage();
-        _log.Debug($"截图尺寸: {image.GetWidth()}x{image.GetHeight()}");
+
+        // 恢复可见性
+        SceneTransitionRect.Visible = wasVisible;
+
         // 转换为 ImageTexture
         var texture = ImageTexture.CreateFromImage(image);
 
@@ -118,25 +134,23 @@ public partial class SceneTransitionManager : Node, IController
 
 
     /// <summary>
-    /// 异步执行过渡进度的插值动画。
-    /// 使用 Tween 方法平滑地更新着色器参数 "progress" 的值。
+    /// 协程版本的进度插值
     /// </summary>
-    /// <param name="from">起始进度值。</param>
-    /// <param name="to">目标进度值。</param>
-    /// <param name="duration">动画持续时间（秒）。</param>
-    /// <returns>返回一个任务，表示动画完成。</returns>
-    private async Task TweenProgress(float from, float to, float duration)
+    private IEnumerator<IYieldInstruction> TweenProgressCoroutine(float from, float to, float duration)
     {
-        _material.SetShaderParameter("progress", from);
+        _material.SetShaderParameter(Progress, from);
 
         var tween = CreateTween();
         tween.TweenMethod(
-            Callable.From<float>(v => { _material.SetShaderParameter("progress", v); }),
+            Callable.From<float>(v =>
+            {
+                _material.SetShaderParameter(Progress, v);
+                _log.Debug($"Progress: {v}"); // 调试用
+            }),
             from,
             to,
             duration
         );
-
-        await ToSignal(tween, Tween.SignalName.Finished);
+        yield return new WaitForTask(ToSignal(tween, Tween.SignalName.Finished).AsTask());
     }
 }
