@@ -227,7 +227,6 @@ public partial class SceneTransitionManager : Node, IController
         // 临时隐藏过渡层
         var wasVisible = SceneTransitionRect.Visible;
         SceneTransitionRect.Visible = false;
-
         // 等待渲染完成
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
 

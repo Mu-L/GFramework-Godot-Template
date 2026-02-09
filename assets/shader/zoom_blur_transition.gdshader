@@ -15,7 +15,7 @@ uniform int samples : hint_range(4, 32) = 20;
 uniform vec2 blur_center = vec2(0.5, 0.5);
 
 // ========================
-// 内部缓动（Shader 自洽，不暴露给 C#）
+// 内部缓动
 // ========================
 float exponential_ease_in_out(float t) {
 	if (t <= 0.0 || t >= 1.0) return t;

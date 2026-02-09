@@ -32,6 +32,6 @@ public class OpenOptionsMenuCommand : AbstractCommand
     protected override void OnExecute()
     {
         // 获取 UI 路由系统实例，并调用 Show 方法显示选项菜单
-        this.GetSystem<IUiRouter>()!.Show(OptionsMenu.UiKeyStr, UiLayer.Modal, null);
+        this.GetSystem<IUiRouter>()!.Show(OptionsMenu.UiKeyStr, UiLayer.Modal);
     }
 }
