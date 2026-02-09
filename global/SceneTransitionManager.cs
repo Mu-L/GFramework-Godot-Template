@@ -2,6 +2,7 @@ using GFramework.Core.Abstractions.controller;
 using GFramework.Core.Abstractions.coroutine;
 using GFramework.Core.coroutine.extensions;
 using GFramework.Core.coroutine.instructions;
+using GFramework.Godot.extensions;
 using GFramework.SourceGenerators.Abstractions.logging;
 using GFramework.SourceGenerators.Abstractions.rule;
 using Godot;
@@ -207,10 +208,10 @@ public partial class SceneTransitionManager : Node, IController
         finally
         {
             // 7. 清理预览场景
-            if (previewScene != null && IsInstanceValid(previewScene))
+            if (previewScene.IsValidNode())
             {
                 PreviewViewport.RemoveChild(previewScene);
-                previewScene.QueueFree();
+                previewScene.QueueFreeX();
                 _log.Debug("清理预览场景");
             }
 
