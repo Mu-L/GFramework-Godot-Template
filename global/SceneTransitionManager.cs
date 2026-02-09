@@ -101,7 +101,6 @@ public partial class SceneTransitionManager : Node, IController
     {
         if (IsTransitioning)
         {
-            _log.Warn("已有过渡正在进行中，忽略新的过渡请求");
             yield break;
         }
 
@@ -136,8 +135,6 @@ public partial class SceneTransitionManager : Node, IController
 
         SceneTransitionRect.Visible = true;
         yield return new WaitOneFrame();
-
-        _log.Debug($"分辨率: {viewportSize}");
 
         // 4. 执行场景切换（此时屏幕已被遮挡）
         _log.Debug("步骤4: 执行场景切换");
