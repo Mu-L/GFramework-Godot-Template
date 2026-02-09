@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://db7uqtqvqp4dn"]
 
 [ext_resource type="Script" uid="uid://kief88kpnnn8" path="res://scripts/intro/Intro.cs" id="1_iatiw"]
-[ext_resource type="Texture2D" uid="uid://dojjkiihj80mu" path="res://assets/art/textures/boot_start/noobkazoku.png" id="2_iatiw"]
+[ext_resource type="Texture2D" uid="uid://d0tcs4pj5rn3u" path="res://assets/art/textures/boot_start/made by noobkazoku.png" id="2_iatiw"]
 
 [sub_resource type="Animation" id="Animation_iatiw"]
 length = 0.001
@@ -63,6 +63,7 @@ script = ExtResource("1_iatiw")
 [node name="Sprite" type="Sprite2D" parent="." unique_id=1320227897]
 unique_name_in_owner = true
 position = Vector2(960, 540)
+scale = Vector2(3, 3)
 texture = ExtResource("2_iatiw")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=2126208967]

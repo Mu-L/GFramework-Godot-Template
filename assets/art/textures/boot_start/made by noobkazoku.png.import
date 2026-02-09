@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dojjkiihj80mu"
-path="res://.godot/imported/noobkazoku.png-631bf890038d61d1a9880c35d45b34a9.ctex"
+uid="uid://d0tcs4pj5rn3u"
+path="res://.godot/imported/made by noobkazoku.png-b7e8bed18472b5755e891becbca1bd6c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/textures/boot_start/noobkazoku.png"
-dest_files=["res://.godot/imported/noobkazoku.png-631bf890038d61d1a9880c35d45b34a9.ctex"]
+source_file="res://assets/art/textures/boot_start/made by noobkazoku.png"
+dest_files=["res://.godot/imported/made by noobkazoku.png-b7e8bed18472b5755e891becbca1bd6c.ctex"]
 
 [params]
 
