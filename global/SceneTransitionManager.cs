@@ -22,14 +22,14 @@ public partial class SceneTransitionManager : Node, IController
     private static readonly string Progress = "progress";
 
     /// <summary>
-    /// 画布层节点，用于确保过渡效果显示在最上层。
-    /// </summary>
-    private CanvasLayer _canvasLayer = null!;
-
-    /// <summary>
     /// 当前使用的Shader材质实例。
     /// </summary>
     private ShaderMaterial _material = null!;
+
+    /// <summary>
+    /// 画布层节点，用于确保过渡效果显示在最上层。
+    /// </summary>
+    private CanvasLayer CanvasLayer => GetNode<CanvasLayer>("%CanvasLayer");
 
     /// <summary>
     /// 场景过渡管理器的单例实例。
@@ -39,7 +39,21 @@ public partial class SceneTransitionManager : Node, IController
     /// <summary>
     /// 获取场景过渡矩形节点。
     /// </summary>
+    /// <remarks>
+    /// 该属性通过节点路径 "%SceneTransitionRect" 获取一个 ColorRect 类型的节点，
+    /// 用于表示场景过渡时的视觉效果区域。
+    /// </remarks>
     private ColorRect SceneTransitionRect => GetNode<ColorRect>("%SceneTransitionRect");
+
+    /// <summary>
+    /// 获取预览视口节点。
+    /// </summary>
+    /// <remarks>
+    /// 该属性通过节点路径 "%PreviewViewport" 获取一个 SubViewport 类型的节点，
+    /// 用于渲染和显示预览内容。
+    /// </remarks>
+    private SubViewport PreviewViewport => GetNode<SubViewport>("%PreviewViewport");
+
 
     /// <summary>
     /// 标识当前是否正在执行场景过渡。
@@ -54,9 +68,8 @@ public partial class SceneTransitionManager : Node, IController
     {
         Instance = this;
 
-        _canvasLayer = GetNode<CanvasLayer>("CanvasLayer");
-        _canvasLayer.Layer = 100; // 确保在最上层
-
+        CanvasLayer.Layer = 100; // 确保在最上层
+        PreviewViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled;
         // 创建材质的独立副本
         var originalMaterial = (ShaderMaterial)SceneTransitionRect.Material;
         _material = (ShaderMaterial)originalMaterial.Duplicate();
