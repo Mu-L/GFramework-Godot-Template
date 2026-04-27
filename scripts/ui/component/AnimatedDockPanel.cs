@@ -83,10 +83,14 @@ public partial class AnimatedDockPanel : BaseAnimatedDockPanel
     {
         var previousExpandedText = GetExpandedArrow(previousEdge);
         var previousCollapsedText = GetCollapsedArrow(previousEdge);
-        if (force || string.IsNullOrEmpty(ExpandedButtonText) || ExpandedButtonText == previousExpandedText)
+        if (force ||
+            string.IsNullOrEmpty(ExpandedButtonText) ||
+            string.Equals(ExpandedButtonText, previousExpandedText, StringComparison.Ordinal))
             ExpandedButtonText = GetExpandedArrow(nextEdge);
 
-        if (force || string.IsNullOrEmpty(CollapsedButtonText) || CollapsedButtonText == previousCollapsedText)
+        if (force ||
+            string.IsNullOrEmpty(CollapsedButtonText) ||
+            string.Equals(CollapsedButtonText, previousCollapsedText, StringComparison.Ordinal))
             CollapsedButtonText = GetCollapsedArrow(nextEdge);
     }
 
