@@ -1,37 +1,33 @@
-using GFrameworkGodotTemplate.scripts.core.ui;
 using GFrameworkGodotTemplate.scripts.config;
-using GFrameworkGodotTemplate.scripts.cqrs.audio.command;
-using GFrameworkGodotTemplate.scripts.cqrs.audio.command.input;
-using GFrameworkGodotTemplate.scripts.cqrs.graphics.command;
-using GFrameworkGodotTemplate.scripts.cqrs.graphics.command.input;
-using GFrameworkGodotTemplate.scripts.cqrs.setting.command;
-using GFrameworkGodotTemplate.scripts.cqrs.setting.command.input;
+using GFrameworkGodotTemplate.scripts.core.ui;
 using GFrameworkGodotTemplate.scripts.cqrs.setting.query;
+using GFrameworkGodotTemplate.scripts.cqrs.setting.query.view;
 using GFrameworkGodotTemplate.scripts.enums.ui;
+using GFrameworkGodotTemplate.scripts.ui.component;
 using Godot;
 using VolumeContainer = GFrameworkGodotTemplate.scripts.ui.component.VolumeContainer;
 
 namespace GFrameworkGodotTemplate.scripts.options_menu;
 
 /// <summary>
-///     选项设置界面控制器
-///     负责处理游戏设置界面的UI逻辑，包括音量控制、分辨率和全屏模式设置
+///     选项设置界面控制器。
+///     页面内修改先保留为待应用状态，点击“应用”后才写入设置并保存。
 /// </summary>
 [ContextAware]
 [Log]
-public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider, ISimpleUiPage
+public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider, ISimpleUiPage,
+    IUiInteractionProfileProvider, IUiActionHandler
 {
     private const string ChineseLanguageValue = "简体中文";
     private const string EnglishLanguageValue = "English";
 
-    // 语言选项
-    private readonly string[] _languages =
-    [
-        ChineseLanguageValue,
-        EnglishLanguageValue
-    ];
+    private readonly AudioSettings _appliedAudio = new();
+    private readonly GraphicsSettings _appliedGraphics = new();
+    private readonly LocalizationSettings _appliedLocalization = new();
+    private readonly AudioSettings _pendingAudio = new();
+    private readonly GraphicsSettings _pendingGraphics = new();
+    private readonly LocalizationSettings _pendingLocalization = new();
 
-    // 分辨率选项
     private readonly Vector2I[] _resolutions =
     [
         new(1920, 1080),
@@ -40,56 +36,96 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
         new(1024, 768)
     ];
 
-    /// <summary>
-    ///     背景音乐音量控制容器
-    /// </summary>
+    [GetNode] private Button _applyButton = null!;
+
+    [GetNode("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Audio/Title")]
+    private Label _audioTitleLabel = null!;
+
+    [GetNode("%Back")] private Button _backButton = null!;
+
     [GetNode] private VolumeContainer _bgmVolumeContainer = null!;
 
     [GetUtility] private ITemplateContentCatalog _contentCatalog = null!;
 
-    /// <summary>
-    ///     全屏模式选择按钮
-    /// </summary>
+    [GetNode(
+        "Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Graphics/MarginContainer/FullscreenContainer/FullscreenLabel")]
+    private Label _fullscreenLabel = null!;
+
     [GetNode] private OptionButton _fullscreenOptionButton = null!;
+
+    [GetNode("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Graphics/Title")]
+    private Label _graphicsTitleLabel = null!;
 
     private bool _initializing;
 
-    /// <summary>
-    ///     语言选择按钮
-    /// </summary>
+    [GetNode(
+        "Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Localization/MarginContainer/LanguageContainer/LanguageLabel")]
+    private Label _languageLabel = null!;
+
     [GetNode] private OptionButton _languageOptionButton = null!;
 
-    /// <summary>
-    ///     主音量控制容器
-    /// </summary>
+    private ILocalizationManager? _localizationManager;
+
+    [GetNode("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Localization/Title")]
+    private Label _localizationTitleLabel = null!;
+
     [GetNode] private VolumeContainer _masterVolumeContainer = null!;
 
-    /// <summary>
-    ///     页面行为实例的私有字段
-    /// </summary>
     private IUiPageBehavior? _page;
 
-    /// <summary>
-    ///     分辨率选择按钮
-    /// </summary>
+    [GetNode(
+        "Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Graphics/MarginContainer2/ResolutionContainer/ResolutionLabel")]
+    private Label _resolutionLabel = null!;
+
     [GetNode] private OptionButton _resolutionOptionButton = null!;
 
-    /// <summary>
-    ///     音效音量控制容器
-    /// </summary>
+    private ISettingsModel _settingsModel = null!;
+    private ISettingsSystem _settingsSystem = null!;
+
     [GetNode] private VolumeContainer _sfxVolumeContainer = null!;
+
+    [GetNode("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Title")]
+    private Label _titleLabel = null!;
 
     private IUiRouter _uiRouter = null!;
 
+    [GetNode] private ConfirmDialog _unsavedChangesDialog = null!;
+
     /// <summary>
-    ///     Ui Key的字符串形式
+    ///     Ui Key的字符串形式。
     /// </summary>
     public static string UiKeyStr => nameof(UiKey.OptionsMenu);
 
     /// <summary>
-    ///     获取页面行为实例，如果不存在则创建新的CanvasItemUiPageBehavior实例
+    ///     处理路由器转发的取消动作。
     /// </summary>
-    /// <returns>返回IUiPageBehavior类型的页面行为实例</returns>
+    bool IUiActionHandler.TryHandleUiAction(UiInputAction action)
+    {
+        if (action != UiInputAction.Cancel) return false;
+
+        if (_unsavedChangesDialog.TryCancel()) return true;
+
+        RequestClose();
+        return true;
+    }
+
+    /// <summary>
+    ///     声明选项页会阻断玩法输入，并在暂停态下继续运行。
+    /// </summary>
+    UiInteractionProfile IUiInteractionProfileProvider.GetUiInteractionProfile(UiLayer layer)
+    {
+        return new UiInteractionProfile
+        {
+            CapturedActions = UiInputActionMask.Cancel,
+            BlocksWorldPointerInput = true,
+            BlocksWorldActionInput = true,
+            ContinueProcessingWhenPaused = true
+        };
+    }
+
+    /// <summary>
+    ///     获取页面行为实例。
+    /// </summary>
     public IUiPageBehavior GetPage()
     {
         _page ??= UiPageBehaviorFactory.Create<Control>(this, UiKeyStr, UiLayer.Modal);
@@ -97,266 +133,494 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     }
 
     /// <summary>
-    ///     检查当前UI是否在路由栈顶，如果不在则将页面推入路由栈
-    /// </summary>
-    private void CallDeferredInit()
-    {
-        CallDeferredInitCoroutine().RunCoroutine(Segment.ProcessIgnorePause);
-    }
-
-    /// <summary>
-    ///     节点准备就绪时的回调方法
-    ///     在节点添加到场景树后调用
+    ///     节点准备就绪时初始化设置页。
     /// </summary>
     public override void _Ready()
     {
         __InjectGetNodes_Generated();
         __InjectContextBindings_Generated();
+
+        _uiRouter = this.GetSystem<IUiRouter>()!;
+        _settingsModel = this.GetModel<ISettingsModel>()!;
+        _settingsSystem = this.GetSystem<ISettingsSystem>()!;
+        _localizationManager = this.GetSystem<ILocalizationManager>()!;
+
+        _localizationManager.SubscribeToLanguageChange(OnCurrentLanguageChanged);
+        this.RegisterEvent<SettingsAppliedEvent<ISettingsSection>>(OnSettingsApplied);
+        _unsavedChangesDialog.Signal("Confirmed").To(Callable.From(OnUnsavedChangesDialogConfirmed)).End();
+        _unsavedChangesDialog.Signal("Canceled").To(Callable.From(OnUnsavedChangesDialogCanceled)).End();
+
         InitCoroutine().RunCoroutine();
+    }
+
+    /// <summary>
+    ///     节点退出树时恢复未应用预览并解绑事件。
+    /// </summary>
+    public override void _ExitTree()
+    {
+        RevertPendingAudioPreviewIfNeededAsync().GetAwaiter().GetResult();
+        this.UnRegisterEvent<SettingsAppliedEvent<ISettingsSection>>(OnSettingsApplied);
+        _localizationManager?.UnsubscribeFromLanguageChange(OnCurrentLanguageChanged);
     }
 
     private IEnumerator<IYieldInstruction> InitCoroutine()
     {
-        GetNode<Button>("%Back").Pressed += OnBackPressed;
         SetupEventHandlers();
-        // 获取UI路由器实例
-        _uiRouter = this.GetSystem<IUiRouter>()!;
-        // 延迟调用初始化方法
         CallDeferred(nameof(CallDeferredInit));
         yield return new Delay(0);
     }
 
-    /// <summary>
-    ///     处理未处理的输入事件，用于 ESC 关闭设置窗口
-    /// </summary>
-    public override void _Input(InputEvent @event)
-    {
-        if (!@event.IsActionPressed("ui_cancel")) return;
-
-        OnBackPressed();
-        AcceptEvent();
-    }
-
-    /// <summary>
-    ///     当按下返回键时的处理方法
-    /// </summary>
-    private void OnBackPressed()
-    {
-        SaveCommandCoroutine().RunCoroutine(Segment.ProcessIgnorePause);
-    }
-
-    /// <summary>
-    ///     开始保存设置协程
-    /// </summary>
-    private void StartSaving()
-    {
-        SaveCommandCoroutine().RunCoroutine(Segment.ProcessIgnorePause);
-    }
-
-
-    /// <summary>
-    ///     异步初始化用户界面
-    ///     设置音量控制组件和分辨率选项的初始值
-    /// </summary>
-    private async Task InitializeUiAsync()
-    {
-        _initializing = true;
-        var view = await this.SendQueryAsync(new GetCurrentSettingsQuery()).ConfigureAwait(true);
-        var text = _contentCatalog.GetMenuText();
-        var audioSettings = view.Audio;
-        _masterVolumeContainer.Initialize(text.OptionsMasterVolume, audioSettings.MasterVolume);
-        _bgmVolumeContainer.Initialize(text.OptionsBgmVolume, audioSettings.BgmVolume);
-        _sfxVolumeContainer.Initialize(text.OptionsSfxVolume, audioSettings.SfxVolume);
-
-        var graphicsSettings = view.Graphics;
-        _resolutionOptionButton.Disabled = graphicsSettings.Fullscreen;
-
-        // 初始化全屏选项
-        PopulateFullscreenOptions(text, graphicsSettings.Fullscreen);
-        // 初始化分辨率选项
-        _resolutionOptionButton.Clear();
-        for (var i = 0; i < _resolutions.Length; i++)
-        {
-            var r = _resolutions[i];
-            _resolutionOptionButton.AddItem($"{r.X}x{r.Y}");
-
-            if (r.X == graphicsSettings.ResolutionWidth && r.Y == graphicsSettings.ResolutionHeight)
-                _resolutionOptionButton.Selected = i; // ⭐ 正确方式
-        }
-
-        var localizationSettings = view.Localization;
-        PopulateLanguageOptions(text, localizationSettings.Language);
-        ApplyMenuTexts(text);
-        _initializing = false;
-    }
-
-    /// <summary>
-    ///     设置事件处理器
-    ///     为音量控制、分辨率和全屏模式选择器绑定事件处理逻辑
-    /// </summary>
     private void SetupEventHandlers()
     {
         var signalName = VolumeContainer.SignalName.VolumeChanged;
-        _masterVolumeContainer
-            .Signal(signalName)
-            .To(Callable.From<float>(v =>
-                this.RunCommandCoroutine(
-                    new ChangeMasterVolumeCommand(new ChangeMasterVolumeCommandInput { Volume = v }))))
-            .End();
-        _bgmVolumeContainer
-            .Signal(signalName)
-            .To(Callable.From<float>(v =>
-                this.RunCommandCoroutine(
-                    new ChangeBgmVolumeCommand(
-                        new ChangeBgmVolumeCommandInput { Volume = v }))))
-            .End();
-        _sfxVolumeContainer
-            .Signal(signalName)
-            .To(Callable.From<float>(v =>
-                this.RunCommandCoroutine(
-                    new ChangeSfxVolumeCommand(
-                        new ChangeSfxVolumeCommandInput { Volume = v }))))
-            .End();
-        _resolutionOptionButton.ItemSelected += async index => await OnResolutionChanged(index).ConfigureAwait(true);
-        _fullscreenOptionButton.ItemSelected += async index => await OnFullscreenChanged(index).ConfigureAwait(true);
-        _languageOptionButton.ItemSelected += async index => await OnLanguageChanged(index).ConfigureAwait(true);
+        _masterVolumeContainer.Signal(signalName).To(Callable.From<float>(OnMasterVolumeChanged)).End();
+        _bgmVolumeContainer.Signal(signalName).To(Callable.From<float>(OnBgmVolumeChanged)).End();
+        _sfxVolumeContainer.Signal(signalName).To(Callable.From<float>(OnSfxVolumeChanged)).End();
+        _resolutionOptionButton.ItemSelected += OnResolutionOptionButtonItemSelected;
+        _fullscreenOptionButton.ItemSelected += OnFullscreenOptionButtonItemSelected;
+        _languageOptionButton.ItemSelected += OnLanguageOptionButtonItemSelected;
+        _applyButton.Pressed += OnApplyButtonPressed;
+        _backButton.Pressed += RequestClose;
     }
 
-    /// <summary>
-    ///     语言改变事件
-    /// </summary>
-    /// <param name="index">选择的语言索引</param>
-    private async Task OnLanguageChanged(long index)
+    private void CallDeferredInit()
     {
-        if (_initializing) return;
-
-        // 根据索引获取对应的语言
-        var language = index == 0 ? ChineseLanguageValue : EnglishLanguageValue;
-
-        // 发送更改语言命令
-        await this.SendCommandAsync(new ChangeLanguageCommand(new ChangeLanguageCommandInput
-            { Language = language })).ConfigureAwait(true);
-
-        RefreshLocalizedTexts(language);
-        _log.Debug($"语言更改为: {language}");
+        CallDeferredInitCoroutine().RunCoroutine(Segment.ProcessIgnorePause);
     }
 
-    /// <summary>
-    ///     分辨率改变事件
-    /// </summary>
-    /// <param name="index">选择的分辨率索引</param>
-    private async Task OnResolutionChanged(long index)
-    {
-        if (_initializing) return;
-        var resolution = _resolutions[index];
-        await this.SendCommandAsync(new ChangeResolutionCommand(new ChangeResolutionCommandInput
-            { Width = resolution.X, Height = resolution.Y })).ConfigureAwait(true);
-        _log.Debug($"分辨率更改为: {resolution.X}x{resolution.Y}");
-    }
-
-    /// <summary>
-    ///     全屏模式改变事件
-    /// </summary>
-    /// <param name="index">选择的全屏模式索引</param>
-    private async Task OnFullscreenChanged(long index)
-    {
-        if (_initializing) return;
-        var fullscreen = index == 0;
-        await this.SendCommandAsync(new ToggleFullscreenCommand(new ToggleFullscreenCommandInput
-            { Fullscreen = fullscreen })).ConfigureAwait(true);
-        // ⭐ 禁用 / 启用分辨率选择
-        _resolutionOptionButton.Disabled = fullscreen;
-        _log.Debug($"全屏模式切换为: {fullscreen}");
-    }
-
-    /// <summary>
-    ///     初始化协程，用于设置界面的初始化流程
-    /// </summary>
-    /// <returns>返回一个IYieldInstruction类型的IEnumerator，用于协程执行</returns>
     private IEnumerator<IYieldInstruction> CallDeferredInitCoroutine()
     {
         Hide();
-        var settings = this.GetModel<ISettingsModel>()!;
         var eventBus = this.GetService<IEventBus>()!;
-        if (!settings.IsInitialized)
-            // 等待设置初始化事件完成
-            yield return new WaitForEvent<SettingsInitializedEvent>(eventBus);
+        if (!_settingsModel.IsInitialized) yield return new WaitForEvent<SettingsInitializedEvent>(eventBus);
 
         yield return InitializeUiAsync().AsCoroutineInstruction();
         Show();
     }
 
-    /// <summary>
-    ///     保存命令协程，用于处理设置保存操作
-    /// </summary>
-    /// <returns>返回一个IYieldInstruction类型的IEnumerator，用于协程执行</returns>
-    private IEnumerator<IYieldInstruction> SaveCommandCoroutine()
-    {
-        return this.SendCommandCoroutine(
-                new SaveSettingsCommand(),
-                e => _log.Error("保存失败！", e)
-            )
-            .Then(() =>
-            {
-                _log.Info("设置已保存");
-                var handle = GetPage().Handle;
-                if (handle.HasValue)
-                    _uiRouter.Hide(handle.Value, UiLayer.Modal, true);
-                else
-                    _log.Warn("页面句柄为空，无法隐藏页面");
-            });
-    }
-
-    private void RefreshLocalizedTexts(string selectedLanguage)
+    private async Task InitializeUiAsync()
     {
         _initializing = true;
-        var text = _contentCatalog.GetMenuText();
-        ApplyMenuTexts(text);
-        PopulateFullscreenOptions(text, _fullscreenOptionButton.Selected == 0);
-        PopulateLanguageOptions(text, selectedLanguage);
-        _initializing = false;
+        try
+        {
+            var menuText = _contentCatalog.GetMenuText();
+            ApplyStaticText(menuText);
+
+            var view = await this.SendQueryAsync(new GetCurrentSettingsQuery()).ConfigureAwait(true);
+            CaptureAppliedSettings(view);
+            ResetPendingSettingsToApplied();
+            ApplyPendingSettingsToUi(menuText);
+            RefreshDirtyState();
+        }
+        finally
+        {
+            _initializing = false;
+        }
     }
 
-    private void ApplyMenuTexts(MenuTextConfig text)
+    private void CaptureAppliedSettings(SettingsView view)
     {
-        GetNode<Label>("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Title").Text =
-            text.OptionsTitle;
-        GetNode<Label>("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Audio/Title").Text =
-            text.OptionsAudioTitle;
-        GetNode<Label>("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Graphics/Title").Text =
-            text.OptionsGraphicsTitle;
-        GetNode<Label>("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Localization/Title").Text =
-            text.OptionsLocalizationTitle;
-        GetNode<Label>(
-                "Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Graphics/MarginContainer/FullscreenContainer/FullscreenLabel")
-            .Text = text.OptionsFullscreenLabel;
-        GetNode<Label>(
-                "Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Graphics/MarginContainer2/ResolutionContainer/ResolutionLabel")
-            .Text = text.OptionsResolutionLabel;
-        GetNode<Label>(
-                "Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Localization/MarginContainer/LanguageContainer/LanguageLabel")
-            .Text = text.OptionsLanguageLabel;
-        GetNode<Button>("%Back").Text = text.OptionsBack;
-
-        _masterVolumeContainer.SetTitle(text.OptionsMasterVolume);
-        _bgmVolumeContainer.SetTitle(text.OptionsBgmVolume);
-        _sfxVolumeContainer.SetTitle(text.OptionsSfxVolume);
+        _appliedAudio.LoadFrom(view.Audio);
+        _appliedGraphics.LoadFrom(view.Graphics);
+        _appliedLocalization.LoadFrom(view.Localization);
     }
 
-    private void PopulateFullscreenOptions(MenuTextConfig text, bool fullscreen)
+    private void ResetPendingSettingsToApplied()
     {
+        _pendingAudio.LoadFrom(_appliedAudio);
+        _pendingGraphics.LoadFrom(_appliedGraphics);
+        _pendingLocalization.LoadFrom(_appliedLocalization);
+    }
+
+    private void ApplyPendingSettingsToUi(MenuTextConfig menuText)
+    {
+        _masterVolumeContainer.Initialize(menuText.OptionsMasterVolume, _pendingAudio.MasterVolume);
+        _bgmVolumeContainer.Initialize(menuText.OptionsBgmVolume, _pendingAudio.BgmVolume);
+        _sfxVolumeContainer.Initialize(menuText.OptionsSfxVolume, _pendingAudio.SfxVolume);
+
         _fullscreenOptionButton.Clear();
-        _fullscreenOptionButton.AddItem(text.OptionsFullscreen);
-        _fullscreenOptionButton.AddItem(text.OptionsWindowed);
-        _fullscreenOptionButton.Selected = fullscreen ? 0 : 1;
+        _fullscreenOptionButton.AddItem(menuText.OptionsFullscreen);
+        _fullscreenOptionButton.AddItem(menuText.OptionsWindowed);
+        _fullscreenOptionButton.Selected = _pendingGraphics.Fullscreen ? 0 : 1;
+
+        _resolutionOptionButton.Clear();
+        for (var i = 0; i < _resolutions.Length; i++)
+        {
+            var resolution = _resolutions[i];
+            _resolutionOptionButton.AddItem($"{resolution.X}x{resolution.Y}");
+
+            if (resolution.X == _pendingGraphics.ResolutionWidth &&
+                resolution.Y == _pendingGraphics.ResolutionHeight)
+                _resolutionOptionButton.Selected = i;
+        }
+
+        _resolutionOptionButton.Disabled = _pendingGraphics.Fullscreen;
+
+        _languageOptionButton.Clear();
+        _languageOptionButton.AddItem(menuText.OptionsLanguageZh);
+        _languageOptionButton.AddItem(menuText.OptionsLanguageEn);
+        _languageOptionButton.Selected =
+            string.Equals(_pendingLocalization.Language, ChineseLanguageValue, StringComparison.Ordinal) ? 0 : 1;
     }
 
-    private void PopulateLanguageOptions(MenuTextConfig text, string selectedLanguage)
+    private void ApplyStaticText(MenuTextConfig menuText)
     {
-        _languageOptionButton.Clear();
-        _languageOptionButton.AddItem(text.OptionsLanguageZh);
-        _languageOptionButton.AddItem(text.OptionsLanguageEn);
-        _languageOptionButton.Selected =
-            string.Equals(selectedLanguage, ChineseLanguageValue, StringComparison.Ordinal) ? 0 : 1;
+        _titleLabel.Text = menuText.OptionsTitle;
+        _audioTitleLabel.Text = menuText.OptionsAudioTitle;
+        _graphicsTitleLabel.Text = menuText.OptionsGraphicsTitle;
+        _localizationTitleLabel.Text = menuText.OptionsLocalizationTitle;
+        _fullscreenLabel.Text = menuText.OptionsFullscreenLabel;
+        _resolutionLabel.Text = menuText.OptionsResolutionLabel;
+        _languageLabel.Text = menuText.OptionsLanguageLabel;
+        _applyButton.Text = menuText.OptionsApply;
+        _backButton.Text = menuText.OptionsBack;
+        _unsavedChangesDialog.Configure(
+            menuText.OptionsUnsavedChangesTitle,
+            menuText.OptionsUnsavedChangesText,
+            menuText.OptionsUnsavedApplyAndExit,
+            menuText.OptionsUnsavedDiscardAndExit);
+    }
+
+    private void OnResolutionOptionButtonItemSelected(long index)
+    {
+        if (_initializing) return;
+
+        var resolution = _resolutions[index];
+        _pendingGraphics.ResolutionWidth = resolution.X;
+        _pendingGraphics.ResolutionHeight = resolution.Y;
+        RefreshDirtyState();
+    }
+
+    private void OnFullscreenOptionButtonItemSelected(long index)
+    {
+        if (_initializing) return;
+
+        _pendingGraphics.Fullscreen = index == 0;
+        _resolutionOptionButton.Disabled = _pendingGraphics.Fullscreen;
+        RefreshDirtyState();
+    }
+
+    private void OnLanguageOptionButtonItemSelected(long index)
+    {
+        if (_initializing) return;
+
+        _pendingLocalization.Language = index == 0 ? ChineseLanguageValue : EnglishLanguageValue;
+        RefreshDirtyState();
+    }
+
+    private void OnMasterVolumeChanged(float value)
+    {
+        if (_initializing) return;
+
+        _pendingAudio.MasterVolume = value;
+        StartPreviewPendingAudio();
+        RefreshDirtyState();
+    }
+
+    private void OnBgmVolumeChanged(float value)
+    {
+        if (_initializing) return;
+
+        _pendingAudio.BgmVolume = value;
+        StartPreviewPendingAudio();
+        RefreshDirtyState();
+    }
+
+    private void OnSfxVolumeChanged(float value)
+    {
+        if (_initializing) return;
+
+        _pendingAudio.SfxVolume = value;
+        StartPreviewPendingAudio();
+        RefreshDirtyState();
+    }
+
+    private async void OnApplyButtonPressed()
+    {
+        try
+        {
+            await ApplyPendingChangesAsync(false).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(_contentCatalog.GetMenuText().OptionsSaveFailed, ex);
+        }
+    }
+
+    private async void OnUnsavedChangesDialogConfirmed()
+    {
+        try
+        {
+            await ApplyPendingChangesAsync(true).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(_contentCatalog.GetMenuText().OptionsSaveFailed, ex);
+        }
+    }
+
+    private void OnUnsavedChangesDialogCanceled()
+    {
+        ClosePage();
+    }
+
+    private async Task ApplyPendingChangesAsync(bool closeAfterApply)
+    {
+        if (!HasPendingChanges())
+        {
+            ClosePageIfRequested(closeAfterApply);
+            return;
+        }
+
+        var audioChanged = !AreAudioSettingsEqual(_appliedAudio, _pendingAudio);
+        var graphicsChanged = !AreGraphicsSettingsEqual(_appliedGraphics, _pendingGraphics);
+        var localizationChanged = !AreLocalizationSettingsEqual(_appliedLocalization, _pendingLocalization);
+        var committedAudio = CloneSettings(_appliedAudio);
+        var committedGraphics = CloneSettings(_appliedGraphics);
+        var committedLocalization = CloneSettings(_appliedLocalization);
+
+        try
+        {
+            await ApplyPendingSettingsAsync(audioChanged, graphicsChanged, localizationChanged).ConfigureAwait(true);
+            CommitPendingSettings();
+        }
+        catch
+        {
+            await TryRestoreCommittedSettingsAsync(
+                committedAudio,
+                committedGraphics,
+                committedLocalization,
+                audioChanged,
+                graphicsChanged,
+                localizationChanged).ConfigureAwait(true);
+            RefreshDirtyState();
+            throw;
+        }
+
+        ClosePageIfRequested(closeAfterApply);
+    }
+
+    private async Task ApplyPendingSettingsAsync(bool audioChanged, bool graphicsChanged, bool localizationChanged)
+    {
+        LoadSettingsModel(_pendingAudio, _pendingGraphics, _pendingLocalization);
+
+        if (audioChanged)
+            await _settingsSystem.Apply<GodotAudioSettings>().ConfigureAwait(true);
+
+        if (graphicsChanged)
+            await _settingsSystem.Apply<GodotGraphicsSettings>().ConfigureAwait(true);
+
+        if (localizationChanged)
+        {
+            await _settingsSystem.Apply<GodotLocalizationSettings>().ConfigureAwait(true);
+            RefreshLocalizedUi();
+        }
+
+        await _settingsSystem.SaveAll().ConfigureAwait(true);
+    }
+
+    private void CommitPendingSettings()
+    {
+        _appliedAudio.LoadFrom(_pendingAudio);
+        _appliedGraphics.LoadFrom(_pendingGraphics);
+        _appliedLocalization.LoadFrom(_pendingLocalization);
+        RefreshDirtyState();
+        _log.Info(_contentCatalog.GetMenuText().OptionsSaved);
+    }
+
+    private async Task TryRestoreCommittedSettingsAsync(
+        AudioSettings committedAudio,
+        GraphicsSettings committedGraphics,
+        LocalizationSettings committedLocalization,
+        bool audioChanged,
+        bool graphicsChanged,
+        bool localizationChanged)
+    {
+        try
+        {
+            await RestoreCommittedSettingsAsync(
+                committedAudio,
+                committedGraphics,
+                committedLocalization,
+                audioChanged,
+                graphicsChanged,
+                localizationChanged).ConfigureAwait(true);
+        }
+        catch (Exception restoreEx)
+        {
+            _log.Error("恢复已应用设置失败。", restoreEx);
+        }
+    }
+
+    private void ClosePageIfRequested(bool closeAfterApply)
+    {
+        if (closeAfterApply) ClosePage();
+    }
+
+    private void RequestClose()
+    {
+        if (HasPendingChanges())
+        {
+            _unsavedChangesDialog.Open();
+            return;
+        }
+
+        ClosePage();
+    }
+
+    private void ClosePage()
+    {
+        RevertPendingAudioPreviewIfNeededAsync().GetAwaiter().GetResult();
+        ResetPendingSettingsToApplied();
+        RefreshLocalizedUi();
+        var handle = GetPage().Handle;
+        if (handle.HasValue)
+        {
+            _uiRouter.Hide(handle.Value, UiLayer.Modal, true);
+            return;
+        }
+
+        _log.Warn(_contentCatalog.GetMenuText().OptionsPageHandleEmpty);
+    }
+
+    private void OnCurrentLanguageChanged(string _)
+    {
+        CallDeferred(nameof(RefreshLocalizedUi));
+    }
+
+    private void OnSettingsApplied(SettingsAppliedEvent<ISettingsSection> @event)
+    {
+        if (!@event.Success ||
+            @event.Settings is not IResetApplyAbleSettings settings ||
+            settings.DataType != typeof(LocalizationSettings))
+            return;
+
+        CallDeferred(nameof(RefreshLocalizedUi));
+    }
+
+    private void RefreshLocalizedUi()
+    {
+        if (!IsInsideTree()) return;
+
+        _initializing = true;
+        try
+        {
+            var menuText = _contentCatalog.GetMenuText();
+            ApplyStaticText(menuText);
+            ApplyPendingSettingsToUi(menuText);
+            RefreshDirtyState();
+        }
+        finally
+        {
+            _initializing = false;
+        }
+    }
+
+    private void RefreshDirtyState()
+    {
+        _applyButton.Disabled = !HasPendingChanges();
+    }
+
+    private bool HasPendingChanges()
+    {
+        return !AreAudioSettingsEqual(_appliedAudio, _pendingAudio) ||
+               !AreGraphicsSettingsEqual(_appliedGraphics, _pendingGraphics) ||
+               !AreLocalizationSettingsEqual(_appliedLocalization, _pendingLocalization);
+    }
+
+    private static bool AreAudioSettingsEqual(AudioSettings left, AudioSettings right)
+    {
+        return Mathf.IsEqualApprox(left.MasterVolume, right.MasterVolume) &&
+               Mathf.IsEqualApprox(left.BgmVolume, right.BgmVolume) &&
+               Mathf.IsEqualApprox(left.SfxVolume, right.SfxVolume);
+    }
+
+    private static bool AreGraphicsSettingsEqual(GraphicsSettings left, GraphicsSettings right)
+    {
+        return left.Fullscreen == right.Fullscreen &&
+               left.ResolutionWidth == right.ResolutionWidth &&
+               left.ResolutionHeight == right.ResolutionHeight;
+    }
+
+    private static bool AreLocalizationSettingsEqual(LocalizationSettings left, LocalizationSettings right)
+    {
+        return string.Equals(left.Language, right.Language, StringComparison.Ordinal);
+    }
+
+    private async Task PreviewPendingAudioAsync()
+    {
+        _settingsModel.GetData<AudioSettings>().LoadFrom(_pendingAudio);
+        await _settingsSystem.Apply<GodotAudioSettings>().ConfigureAwait(true);
+    }
+
+    private async Task RestoreCommittedSettingsAsync(
+        AudioSettings audio,
+        GraphicsSettings graphics,
+        LocalizationSettings localization,
+        bool audioChanged,
+        bool graphicsChanged,
+        bool localizationChanged)
+    {
+        LoadSettingsModel(audio, graphics, localization);
+
+        if (audioChanged) await _settingsSystem.Apply<GodotAudioSettings>().ConfigureAwait(true);
+
+        if (graphicsChanged) await _settingsSystem.Apply<GodotGraphicsSettings>().ConfigureAwait(true);
+
+        if (localizationChanged) await _settingsSystem.Apply<GodotLocalizationSettings>().ConfigureAwait(true);
+
+        RefreshLocalizedUi();
+    }
+
+    private void LoadSettingsModel(
+        AudioSettings audio,
+        GraphicsSettings graphics,
+        LocalizationSettings localization)
+    {
+        _settingsModel.GetData<AudioSettings>().LoadFrom(audio);
+        _settingsModel.GetData<GraphicsSettings>().LoadFrom(graphics);
+        _settingsModel.GetData<LocalizationSettings>().LoadFrom(localization);
+    }
+
+    private static AudioSettings CloneSettings(AudioSettings source)
+    {
+        var clone = new AudioSettings();
+        clone.LoadFrom(source);
+        return clone;
+    }
+
+    private static GraphicsSettings CloneSettings(GraphicsSettings source)
+    {
+        var clone = new GraphicsSettings();
+        clone.LoadFrom(source);
+        return clone;
+    }
+
+    private static LocalizationSettings CloneSettings(LocalizationSettings source)
+    {
+        var clone = new LocalizationSettings();
+        clone.LoadFrom(source);
+        return clone;
+    }
+
+    private async Task RevertPendingAudioPreviewIfNeededAsync()
+    {
+        if (AreAudioSettingsEqual(_appliedAudio, _pendingAudio)) return;
+
+        _pendingAudio.LoadFrom(_appliedAudio);
+        _settingsModel.GetData<AudioSettings>().LoadFrom(_appliedAudio);
+        await _settingsSystem.Apply<GodotAudioSettings>().ConfigureAwait(true);
+    }
+
+    private async void StartPreviewPendingAudio()
+    {
+        try
+        {
+            await PreviewPendingAudioAsync().ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            _log.Error("预览音量设置失败。", ex);
+        }
     }
 }

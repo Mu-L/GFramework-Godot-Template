@@ -1,3 +1,4 @@
+using GFrameworkGodotTemplate.scripts.config;
 using GFrameworkGodotTemplate.scripts.core.state.impls;
 using GFrameworkGodotTemplate.scripts.core.ui;
 using GFrameworkGodotTemplate.scripts.cqrs.game.command;
@@ -10,12 +11,17 @@ namespace GFrameworkGodotTemplate.scripts.pause_menu;
 
 [ContextAware]
 [Log]
-public partial class PauseMenu : Control, IController, IUiPageBehaviorProvider, ISimpleUiPage
+public partial class PauseMenu : Control, IController, IUiPageBehaviorProvider, ISimpleUiPage,
+    IUiInteractionProfileProvider, IUiActionHandler
 {
+    [GetUtility] private ITemplateContentCatalog _contentCatalog = null!;
+
     /// <summary>
     ///     获取加载游戏按钮节点
     /// </summary>
     [GetNode] private Button _loadButton = null!;
+
+    private ILocalizationManager? _localizationManager;
 
     /// <summary>
     ///     获取主菜单按钮节点
@@ -49,10 +55,40 @@ public partial class PauseMenu : Control, IController, IUiPageBehaviorProvider, 
 
     private IStateMachineSystem _stateMachineSystem = null!;
 
+    [GetNode("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Title")]
+    private Label _titleLabel = null!;
+
     /// <summary>
     ///     Ui Key的字符串形式
     /// </summary>
     public static string UiKeyStr => nameof(UiKey.PauseMenu);
+
+    /// <summary>
+    ///     处理由路由器仲裁后的取消动作。
+    /// </summary>
+    bool IUiActionHandler.TryHandleUiAction(UiInputAction action)
+    {
+        if (action != UiInputAction.Cancel || !Visible) return false;
+
+        ResumeGameAndClosePauseMenu();
+        return true;
+    }
+
+    /// <summary>
+    ///     声明暂停菜单在可见时阻断玩法输入并持有全局暂停。
+    /// </summary>
+    UiInteractionProfile IUiInteractionProfileProvider.GetUiInteractionProfile(UiLayer layer)
+    {
+        return new UiInteractionProfile
+        {
+            CapturedActions = UiInputActionMask.Cancel,
+            BlocksWorldPointerInput = true,
+            BlocksWorldActionInput = true,
+            PauseMode = UiPauseMode.WhileVisible,
+            ContinueProcessingWhenPaused = true,
+            PauseReason = "PauseMenu"
+        };
+    }
 
 
     public IUiPageBehavior GetPage()
@@ -67,19 +103,19 @@ public partial class PauseMenu : Control, IController, IUiPageBehaviorProvider, 
     public override void _Ready()
     {
         __InjectGetNodes_Generated();
+        __InjectContextBindings_Generated();
         SetupEventHandlers();
         _stateMachineSystem = this.GetSystem<IStateMachineSystem>()!;
+        _localizationManager = this.GetSystem<ILocalizationManager>()!;
+        _localizationManager.SubscribeToLanguageChange(OnLanguageChanged);
+        this.RegisterEvent<SettingsAppliedEvent<ISettingsSection>>(OnSettingsApplied);
+        ApplyStaticText();
     }
 
-    public override void _Input(InputEvent @event)
+    public override void _ExitTree()
     {
-        if (!@event.IsActionPressed("ui_cancel") || !Visible) return;
-
-        this.SendCommand(new ResumeGameWithClosePauseMenuCommand(new ClosePauseMenuCommandInput
-        {
-            Handle = GetPage().Handle!.Value
-        }));
-        AcceptEvent();
+        this.UnRegisterEvent<SettingsAppliedEvent<ISettingsSection>>(OnSettingsApplied);
+        _localizationManager?.UnsubscribeFromLanguageChange(OnLanguageChanged);
     }
 
     /// <summary>
@@ -123,5 +159,43 @@ public partial class PauseMenu : Control, IController, IUiPageBehaviorProvider, 
 
         // 绑定退出游戏按钮点击事件
         _quitButton.Pressed += () => this.RunCommandCoroutine(new ExitGameCommand());
+    }
+
+    /// <summary>
+    ///     恢复游戏并关闭暂停菜单。
+    /// </summary>
+    private void ResumeGameAndClosePauseMenu()
+    {
+        this.SendCommand(new ResumeGameWithClosePauseMenuCommand(new ClosePauseMenuCommandInput
+        {
+            Handle = GetPage().Handle!.Value
+        }));
+    }
+
+    private void ApplyStaticText()
+    {
+        var text = _contentCatalog.GetMenuText();
+        _titleLabel.Text = text.PauseTitle;
+        _resumeButton.Text = text.PauseResume;
+        _saveButton.Text = text.PauseSave;
+        _loadButton.Text = text.PauseLoad;
+        _optionsButton.Text = text.PauseOptions;
+        _mainMenuButton.Text = text.PauseMainMenu;
+        _quitButton.Text = text.PauseQuit;
+    }
+
+    private void OnLanguageChanged(string _)
+    {
+        ApplyStaticText();
+    }
+
+    private void OnSettingsApplied(SettingsAppliedEvent<ISettingsSection> @event)
+    {
+        if (!@event.Success ||
+            @event.Settings is not IResetApplyAbleSettings settings ||
+            settings.DataType != typeof(LocalizationSettings))
+            return;
+
+        ApplyStaticText();
     }
 }

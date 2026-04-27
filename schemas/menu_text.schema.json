@@ -16,6 +16,8 @@
     "creditsBack",
     "pauseTitle",
     "pauseResume",
+    "pauseSave",
+    "pauseLoad",
     "pauseOptions",
     "pauseMainMenu",
     "pauseQuit",
@@ -35,8 +37,13 @@
     "optionsLanguageEn",
     "optionsApply",
     "optionsBack",
+    "optionsUnsavedChangesTitle",
+    "optionsUnsavedChangesText",
+    "optionsUnsavedApplyAndExit",
+    "optionsUnsavedDiscardAndExit",
     "optionsSaveFailed",
-    "optionsSaved"
+    "optionsSaved",
+    "optionsPageHandleEmpty"
   ],
   "properties": {
     "id": {
@@ -54,6 +61,12 @@
     "creditsBack": { "type": "string" },
     "pauseTitle": { "type": "string" },
     "pauseResume": { "type": "string" },
+    "pauseSave": {
+      "type": "string"
+    },
+    "pauseLoad": {
+      "type": "string"
+    },
     "pauseOptions": { "type": "string" },
     "pauseMainMenu": { "type": "string" },
     "pauseQuit": { "type": "string" },
@@ -73,8 +86,25 @@
     "optionsLanguageEn": { "type": "string" },
     "optionsApply": { "type": "string" },
     "optionsBack": { "type": "string" },
+    "optionsUnsavedChangesTitle": {
+      "type": "string"
+    },
+    "optionsUnsavedChangesText": {
+      "type": "string"
+    },
+    "optionsUnsavedApplyAndExit": {
+      "type": "string"
+    },
+    "optionsUnsavedDiscardAndExit": {
+      "type": "string"
+    },
     "optionsSaveFailed": { "type": "string" },
-    "optionsSaved": { "type": "string" }
+    "optionsSaved": {
+      "type": "string"
+    },
+    "optionsPageHandleEmpty": {
+      "type": "string"
+    }
   },
   "additionalProperties": false
 }

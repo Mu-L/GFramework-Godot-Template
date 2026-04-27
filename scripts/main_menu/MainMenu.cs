@@ -1,3 +1,4 @@
+using GFrameworkGodotTemplate.scripts.config;
 using GFrameworkGodotTemplate.scripts.core.state.impls;
 using GFrameworkGodotTemplate.scripts.core.ui;
 using GFrameworkGodotTemplate.scripts.cqrs.game.command;
@@ -16,11 +17,15 @@ namespace GFrameworkGodotTemplate.scripts.main_menu;
 [Log]
 public partial class MainMenu : Control, IController, IUiPageBehaviorProvider, ISimpleUiPage
 {
+    [GetUtility] private ITemplateContentCatalog _contentCatalog = null!;
+
     [GetNode] private Button _continueGameButton = null!;
 
     [GetNode] private Button _creditsButton = null!;
 
     [GetNode] private Button _exitButton = null!;
+
+    private ILocalizationManager? _localizationManager;
 
     [GetNode] private Button _newGameButton = null!;
 
@@ -57,9 +62,20 @@ public partial class MainMenu : Control, IController, IUiPageBehaviorProvider, I
     public override void _Ready()
     {
         __InjectGetNodes_Generated();
+        __InjectContextBindings_Generated();
         _uiRouter = this.GetSystem<IUiRouter>()!;
         _stateMachineSystem = this.GetSystem<IStateMachineSystem>()!;
+        _localizationManager = this.GetSystem<ILocalizationManager>()!;
+        _localizationManager.SubscribeToLanguageChange(OnLanguageChanged);
+        this.RegisterEvent<SettingsAppliedEvent<ISettingsSection>>(OnSettingsApplied);
         SetupEventHandlers();
+        ApplyStaticText();
+    }
+
+    public override void _ExitTree()
+    {
+        this.UnRegisterEvent<SettingsAppliedEvent<ISettingsSection>>(OnSettingsApplied);
+        _localizationManager?.UnsubscribeFromLanguageChange(OnLanguageChanged);
     }
 
     private void SetupEventHandlers()
@@ -76,5 +92,30 @@ public partial class MainMenu : Control, IController, IUiPageBehaviorProvider, I
         {
             _stateMachineSystem.ChangeToAsync<PlayingState>().ToCoroutineEnumerator().RunCoroutine();
         };
+    }
+
+    private void ApplyStaticText()
+    {
+        var text = _contentCatalog.GetMenuText();
+        _newGameButton.Text = text.MainMenuNewGame;
+        _continueGameButton.Text = text.MainMenuContinue;
+        _optionsMenuButton.Text = text.MainMenuOptions;
+        _creditsButton.Text = text.MainMenuCredits;
+        _exitButton.Text = text.MainMenuExit;
+    }
+
+    private void OnLanguageChanged(string _)
+    {
+        ApplyStaticText();
+    }
+
+    private void OnSettingsApplied(SettingsAppliedEvent<ISettingsSection> @event)
+    {
+        if (!@event.Success ||
+            @event.Settings is not IResetApplyAbleSettings settings ||
+            settings.DataType != typeof(LocalizationSettings))
+            return;
+
+        ApplyStaticText();
     }
 }

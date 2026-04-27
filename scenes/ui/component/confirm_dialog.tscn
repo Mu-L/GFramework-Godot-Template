@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/ui/component/ConfirmDialog.cs" id="1_confirm_dialog"]
 [ext_resource type="Theme" uid="uid://drg0lvsgoqfsc" path="res://resource/theme/project_theme.tres" id="2_theme"]
-[ext_resource type="Script" uid="uid://clyyndxt3is4e" path="res://scripts/ui/component/HoverEffect.cs" id="99_hover"]
+[ext_resource type="Script" path="res://scripts/ui/component/HoverEffect.cs" id="99_hover"]
 
 [node name="ConfirmDialog" type="Control"]
 visible = false

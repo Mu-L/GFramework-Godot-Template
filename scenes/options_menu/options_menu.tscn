@@ -2,7 +2,9 @@
 
 [ext_resource type="PackedScene" uid="uid://yd2jo4bddl1v" path="res://scenes/ui/component/volume_container.tscn" id="1_08d7r"]
 [ext_resource type="Script" uid="uid://k63bfqjv8kq3" path="res://scripts/options_menu/OptionsMenu.cs" id="1_44mp6"]
+[ext_resource type="PackedScene" path="res://scenes/ui/component/confirm_dialog.tscn" id="2_confirm_dialog"]
 [ext_resource type="Theme" uid="uid://drg0lvsgoqfsc" path="res://resource/theme/project_theme.tres" id="3_025dt"]
+[ext_resource type="Script" path="res://scripts/ui/component/HoverEffect.cs" id="99_hover"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_025dt"]
 texture_margin_left = 64.0
@@ -219,11 +221,38 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 32
 
-[node name="Back" type="Button" parent="Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer" unique_id=182978590]
+[node name="FooterRow" type="HBoxContainer" parent="Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer" unique_id=1182978590]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="ApplyButton" type="Button" parent="Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/FooterRow" unique_id=192978590]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(128, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 theme = ExtResource("3_025dt")
 theme_override_font_sizes/font_size = 32
-text = "退出"
+text = "应用"
+
+[node name="HoverEffect" type="Node" parent="Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/FooterRow/ApplyButton" unique_id=1109897967]
+script = ExtResource("99_hover")
+apply_to_descendants = false
+preset = 0
+
+[node name="Back" type="Button" parent="Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/FooterRow" unique_id=182978590]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("3_025dt")
+theme_override_font_sizes/font_size = 32
+text = "返回"
+
+[node name="HoverEffect" type="Node" parent="Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/FooterRow/Back" unique_id=1389381432]
+script = ExtResource("99_hover")
+apply_to_descendants = false
+preset = 1
+
+[node name="UnsavedChangesDialog" parent="." unique_id=172978590 instance=ExtResource("2_confirm_dialog")]
+unique_name_in_owner = true

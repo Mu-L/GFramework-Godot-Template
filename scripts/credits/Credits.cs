@@ -1,3 +1,4 @@
+using GFrameworkGodotTemplate.scripts.config;
 using GFrameworkGodotTemplate.scripts.core.ui;
 using GFrameworkGodotTemplate.scripts.enums.ui;
 using Godot;
@@ -10,10 +11,20 @@ public partial class Credits : Control, IController, IUiPageBehaviorProvider, IS
 {
     [GetNode] private Button _backButton = null!;
 
+    [GetUtility] private ITemplateContentCatalog _contentCatalog = null!;
+
+    private ILocalizationManager? _localizationManager;
+
+    [GetNode("MarginContainer/VBoxContainer/Members")]
+    private Label _membersLabel = null!;
+
     /// <summary>
     ///     页面行为实例的私有字段
     /// </summary>
     private IUiPageBehavior? _page;
+
+    [GetNode("MarginContainer/VBoxContainer/Title")]
+    private Label _titleLabel = null!;
 
     private IUiRouter _uiRouter = null!;
 
@@ -51,7 +62,18 @@ public partial class Credits : Control, IController, IUiPageBehaviorProvider, IS
     public override void _Ready()
     {
         __InjectGetNodes_Generated();
+        __InjectContextBindings_Generated();
+        _localizationManager = this.GetSystem<ILocalizationManager>()!;
+        _localizationManager.SubscribeToLanguageChange(OnLanguageChanged);
+        this.RegisterEvent<SettingsAppliedEvent<ISettingsSection>>(OnSettingsApplied);
+        ApplyStaticText();
         InitCoroutine().RunCoroutine();
+    }
+
+    public override void _ExitTree()
+    {
+        this.UnRegisterEvent<SettingsAppliedEvent<ISettingsSection>>(OnSettingsApplied);
+        _localizationManager?.UnsubscribeFromLanguageChange(OnLanguageChanged);
     }
 
     /// <summary>
@@ -76,5 +98,28 @@ public partial class Credits : Control, IController, IUiPageBehaviorProvider, IS
     private void OnBackButton()
     {
         _uiRouter.PopAsync().AsTask().ToCoroutineEnumerator().RunCoroutine();
+    }
+
+    private void ApplyStaticText()
+    {
+        var text = _contentCatalog.GetMenuText();
+        _titleLabel.Text = text.CreditsTitle;
+        _membersLabel.Text = text.CreditsMembers;
+        _backButton.Text = text.CreditsBack;
+    }
+
+    private void OnLanguageChanged(string _)
+    {
+        ApplyStaticText();
+    }
+
+    private void OnSettingsApplied(SettingsAppliedEvent<ISettingsSection> @event)
+    {
+        if (!@event.Success ||
+            @event.Settings is not IResetApplyAbleSettings settings ||
+            settings.DataType != typeof(LocalizationSettings))
+            return;
+
+        ApplyStaticText();
     }
 }

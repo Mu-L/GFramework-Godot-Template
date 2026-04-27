@@ -18,5 +18,6 @@ public class SystemModule : IArchitectureModule
         architecture.RegisterSystem(new SceneRouter());
         architecture.RegisterSystem(new SettingsSystem());
         architecture.RegisterSystem(new GodotAudioSystem());
+        architecture.RegisterSystem(new LocalizationManager());
     }
 }

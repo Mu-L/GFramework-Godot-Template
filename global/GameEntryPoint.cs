@@ -2,7 +2,6 @@ using GFrameworkGodotTemplate.scripts.core;
 using GFrameworkGodotTemplate.scripts.core.environment;
 using GFrameworkGodotTemplate.scripts.core.resource;
 using GFrameworkGodotTemplate.scripts.core.state.impls;
-using GFrameworkGodotTemplate.scripts.cqrs.setting.command;
 using GFrameworkGodotTemplate.scripts.enums.scene;
 using GFrameworkGodotTemplate.scripts.utility;
 using Godot;
@@ -61,14 +60,8 @@ public partial class GameEntryPoint : Node
         }, IsDev ? new GameDevEnvironment() : new GameMainEnvironment());
         Architecture.Initialize();
         _settingsModel = this.GetModel<ISettingsModel>()!;
-        _ = _settingsModel.InitializeAsync();
-        // 监听设置初始化完成事件
-        this.RegisterEvent<SettingsInitializedEvent>(e =>
-        {
-            _settingsSystem = this.GetSystem<ISettingsSystem>()!;
-            _ = _settingsSystem.ApplyAll();
-            _log.Info("设置已加载");
-        });
+        _settingsSystem = this.GetSystem<ISettingsSystem>()!;
+        _ = InitializeSettingsAsync();
         _sceneRegistry = this.GetUtility<IGodotSceneRegistry>()!;
         _uiRegistry = this.GetUtility<IGodotUiRegistry>()!;
         _textureRegistry = this.GetUtility<IGodotTextureRegistry>()!;
@@ -89,6 +82,26 @@ public partial class GameEntryPoint : Node
     {
         // 协程预热
         Timing.Prewarm();
+    }
+
+    /// <summary>
+    ///     异步初始化并应用设置，避免事件订阅顺序导致启动时漏应用持久化设置。
+    /// </summary>
+    private async Task InitializeSettingsAsync()
+    {
+        try
+        {
+            await _settingsModel.InitializeAsync().ConfigureAwait(true);
+
+            if (!_settingsModel.IsInitialized) return;
+
+            await _settingsSystem.ApplyAll().ConfigureAwait(true);
+            _log.Info("设置已加载");
+        }
+        catch (Exception ex)
+        {
+            _log.Error("启动时初始化设置失败。", ex);
+        }
     }
 
     private void StartBootState()
@@ -122,6 +135,13 @@ public partial class GameEntryPoint : Node
     /// </summary>
     public override void _ExitTree()
     {
-        _ = this.SendCommandAsync(new SaveSettingsCommand());
+        try
+        {
+            _settingsSystem.SaveAll().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            _log.Error("退出时保存设置失败。", ex);
+        }
     }
 }
