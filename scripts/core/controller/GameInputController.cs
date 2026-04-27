@@ -17,7 +17,7 @@ public abstract partial class GameInputController : Node, IController
 
     /// <summary>
     ///     处理输入事件的主入口方法
-    ///     该方法会分发全局输入事件以及根据游戏暂停状态分发 playing 或 paused 阶段的输入事件
+    ///     该方法会分发全局输入事件以及根据游戏暂停状态分发 Playing 或 Paused 阶段的输入事件
     /// </summary>
     /// <param name="event">输入事件对象</param>
     public override void _Input(InputEvent @event)
