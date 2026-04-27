@@ -24,6 +24,7 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     private readonly AudioSettings _appliedAudio = new();
     private readonly GraphicsSettings _appliedGraphics = new();
     private readonly LocalizationSettings _appliedLocalization = new();
+    private readonly SemaphoreSlim _audioApplySemaphore = new(1, 1);
     private readonly AudioSettings _pendingAudio = new();
     private readonly GraphicsSettings _pendingGraphics = new();
     private readonly LocalizationSettings _pendingLocalization = new();
@@ -57,6 +58,7 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     private Label _graphicsTitleLabel = null!;
 
     private bool _initializing;
+    private int _latestAudioPreviewRequestId;
 
     [GetNode(
         "Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Localization/MarginContainer/LanguageContainer/LanguageLabel")]
@@ -401,10 +403,12 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
 
     private async Task ApplyPendingSettingsAsync(bool audioChanged, bool graphicsChanged, bool localizationChanged)
     {
-        LoadSettingsModel(_pendingAudio, _pendingGraphics, _pendingLocalization);
-
         if (audioChanged)
-            await _settingsSystem.Apply<GodotAudioSettings>().ConfigureAwait(true);
+            await ApplyAudioSettingsSnapshotAsync(CloneSettings(_pendingAudio)).ConfigureAwait(true);
+        else
+            await DrainAudioPreviewRequestsAsync().ConfigureAwait(true);
+
+        LoadSettingsModel(_pendingAudio, _pendingGraphics, _pendingLocalization);
 
         if (graphicsChanged)
             await _settingsSystem.Apply<GodotGraphicsSettings>().ConfigureAwait(true);
@@ -556,8 +560,9 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
 
     private async Task PreviewPendingAudioAsync()
     {
-        _settingsModel.GetData<AudioSettings>().LoadFrom(_pendingAudio);
-        await _settingsSystem.Apply<GodotAudioSettings>().ConfigureAwait(true);
+        var requestId = Interlocked.Increment(ref _latestAudioPreviewRequestId);
+        var audioSnapshot = CloneSettings(_pendingAudio);
+        await ApplyLatestPreviewAudioAsync(audioSnapshot, requestId).ConfigureAwait(true);
     }
 
     private async Task RestoreCommittedSettingsAsync(
@@ -570,7 +575,10 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     {
         LoadSettingsModel(audio, graphics, localization);
 
-        if (audioChanged) await _settingsSystem.Apply<GodotAudioSettings>().ConfigureAwait(true);
+        if (audioChanged)
+            await ApplyAudioSettingsSnapshotAsync(CloneSettings(audio)).ConfigureAwait(true);
+        else
+            await DrainAudioPreviewRequestsAsync().ConfigureAwait(true);
 
         if (graphicsChanged) await _settingsSystem.Apply<GodotGraphicsSettings>().ConfigureAwait(true);
 
@@ -612,11 +620,14 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
 
     private async Task RevertPendingAudioPreviewIfNeededAsync()
     {
-        if (AreAudioSettingsEqual(_appliedAudio, _pendingAudio)) return;
+        if (AreAudioSettingsEqual(_appliedAudio, _pendingAudio))
+        {
+            await DrainAudioPreviewRequestsAsync().ConfigureAwait(true);
+            return;
+        }
 
         _pendingAudio.LoadFrom(_appliedAudio);
-        _settingsModel.GetData<AudioSettings>().LoadFrom(_appliedAudio);
-        await _settingsSystem.Apply<GodotAudioSettings>().ConfigureAwait(true);
+        await ApplyAudioSettingsSnapshotAsync(CloneSettings(_appliedAudio)).ConfigureAwait(true);
     }
 
     private async void StartPreviewPendingAudio()
@@ -629,5 +640,57 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
         {
             _log.Error("预览音量设置失败。", ex);
         }
+    }
+
+    private async Task ApplyLatestPreviewAudioAsync(AudioSettings audioSnapshot, int requestId)
+    {
+        if (requestId != Volatile.Read(ref _latestAudioPreviewRequestId)) return;
+
+        await _audioApplySemaphore.WaitAsync().ConfigureAwait(true);
+        try
+        {
+            if (requestId != Volatile.Read(ref _latestAudioPreviewRequestId)) return;
+
+            await ApplyAudioSettingsSnapshotCoreAsync(audioSnapshot).ConfigureAwait(true);
+        }
+        finally
+        {
+            _audioApplySemaphore.Release();
+        }
+    }
+
+    private async Task ApplyAudioSettingsSnapshotAsync(AudioSettings audioSnapshot)
+    {
+        Interlocked.Increment(ref _latestAudioPreviewRequestId);
+
+        await _audioApplySemaphore.WaitAsync().ConfigureAwait(true);
+        try
+        {
+            await ApplyAudioSettingsSnapshotCoreAsync(audioSnapshot).ConfigureAwait(true);
+        }
+        finally
+        {
+            _audioApplySemaphore.Release();
+        }
+    }
+
+    private async Task DrainAudioPreviewRequestsAsync()
+    {
+        Interlocked.Increment(ref _latestAudioPreviewRequestId);
+
+        await _audioApplySemaphore.WaitAsync().ConfigureAwait(true);
+        try
+        {
+        }
+        finally
+        {
+            _audioApplySemaphore.Release();
+        }
+    }
+
+    private async Task ApplyAudioSettingsSnapshotCoreAsync(AudioSettings audioSnapshot)
+    {
+        _settingsModel.GetData<AudioSettings>().LoadFrom(audioSnapshot);
+        await _settingsSystem.Apply<GodotAudioSettings>().ConfigureAwait(true);
     }
 }

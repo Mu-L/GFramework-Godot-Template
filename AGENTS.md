@@ -42,7 +42,7 @@ This is a Godot 4.6 C# template project targeting `net10.0` through `Godot.NET.S
 
 - Use UTF-8 files. C# nullable reference types are enabled and the project uses preview language features.
 - Prefer existing namespaces under `GFrameworkGodotTemplate.scripts.*` and keep new files close to the feature they implement.
-- Follow the repository naming rules: variables use lower camel case, constants use `UPPER_SNAKE_CASE`, and folders/files use lowercase snake_case for Godot assets and scenes.
+- Follow the repository naming rules: variables use lower camel case; private constants use `UPPER_SNAKE_CASE`; non-private constants use PascalCase to satisfy the analyzer enforced in this repository; folders/files use lowercase snake_case for Godot assets and scenes.
 - C# types remain PascalCase, matching existing files such as `SceneRouter.cs` and `OpenPauseMenuCommandHandler.cs`.
 - Keep comments meaningful. Explain intent, lifecycle assumptions, engine constraints, and non-obvious behavior instead of restating syntax.
 

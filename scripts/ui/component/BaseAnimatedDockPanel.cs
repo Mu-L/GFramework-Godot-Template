@@ -26,6 +26,7 @@ public abstract partial class BaseAnimatedDockPanel : Control, IController
     private Vector2 _measuredPanelSize;
     private Vector2 _measuredToggleSize;
     private float _progress;
+    private bool _targetVisible = true;
     private Tween? _transitionTween;
 
     [GetNode] protected Control ClipRoot = null!;
@@ -268,9 +269,10 @@ public abstract partial class BaseAnimatedDockPanel : Control, IController
     /// <param name="animate">是否播放动画。</param>
     public void SetPanelVisible(bool visible, bool animate = true)
     {
-        if (Visible == visible)
+        if (_targetVisible == visible)
             return;
 
+        _targetVisible = visible;
         StopTransition();
         if (!animate)
         {
@@ -284,9 +286,10 @@ public abstract partial class BaseAnimatedDockPanel : Control, IController
 
         if (visible)
         {
+            var wasHidden = !Visible;
             Visible = true;
             RefreshLayout();
-            SetModulateAlpha(0f);
+            if (wasHidden) SetModulateAlpha(0f);
             _transitionTween = CreateTween();
             _transitionTween.SetTrans(TransitionType);
             _transitionTween.SetEase(EaseType);
@@ -352,6 +355,7 @@ public abstract partial class BaseAnimatedDockPanel : Control, IController
         __InjectGetNodes_Generated();
         __BindNodeSignals_Generated();
         EnsureToggleButtonParent();
+        _targetVisible = Visible;
         IsExpanded = StartExpanded;
         _progress = IsExpanded ? 1f : 0f;
         ApplyMouseFilter();
