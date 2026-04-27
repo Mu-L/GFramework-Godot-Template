@@ -268,7 +268,7 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
         _audioTitleLabel.Text = menuText.OptionsAudioTitle;
         _graphicsTitleLabel.Text = menuText.OptionsGraphicsTitle;
         _localizationTitleLabel.Text = menuText.OptionsLocalizationTitle;
-        _fullscreenLabel.Text = menuText.OptionsFullscreenLabel;
+        _fullscreenLabel.Text = menuText.OptionsDisplayModeLabel;
         _resolutionLabel.Text = menuText.OptionsResolutionLabel;
         _languageLabel.Text = menuText.OptionsLanguageLabel;
         _applyButton.Text = menuText.OptionsApply;
