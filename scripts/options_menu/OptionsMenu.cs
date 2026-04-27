@@ -1,4 +1,5 @@
 using GFrameworkGodotTemplate.scripts.core.ui;
+using GFrameworkGodotTemplate.scripts.config;
 using GFrameworkGodotTemplate.scripts.cqrs.audio.command;
 using GFrameworkGodotTemplate.scripts.cqrs.audio.command.input;
 using GFrameworkGodotTemplate.scripts.cqrs.graphics.command;
@@ -20,11 +21,14 @@ namespace GFrameworkGodotTemplate.scripts.options_menu;
 [Log]
 public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider, ISimpleUiPage
 {
+    private const string ChineseLanguageValue = "简体中文";
+    private const string EnglishLanguageValue = "English";
+
     // 语言选项
     private readonly string[] _languages =
     [
-        "简体中文",
-        "English"
+        ChineseLanguageValue,
+        EnglishLanguageValue
     ];
 
     // 分辨率选项
@@ -40,6 +44,8 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     ///     背景音乐音量控制容器
     /// </summary>
     [GetNode] private VolumeContainer _bgmVolumeContainer = null!;
+
+    [GetUtility] private ITemplateContentCatalog _contentCatalog = null!;
 
     /// <summary>
     ///     全屏模式选择按钮
@@ -105,6 +111,7 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     public override void _Ready()
     {
         __InjectGetNodes_Generated();
+        __InjectContextBindings_Generated();
         InitCoroutine().RunCoroutine();
     }
 
@@ -155,19 +162,17 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     {
         _initializing = true;
         var view = await this.SendQueryAsync(new GetCurrentSettingsQuery()).ConfigureAwait(true);
+        var text = _contentCatalog.GetMenuText();
         var audioSettings = view.Audio;
-        _masterVolumeContainer.Initialize("主音量", audioSettings.MasterVolume);
-        _bgmVolumeContainer.Initialize("音乐音量", audioSettings.BgmVolume);
-        _sfxVolumeContainer.Initialize("音效音量", audioSettings.SfxVolume);
+        _masterVolumeContainer.Initialize(text.OptionsMasterVolume, audioSettings.MasterVolume);
+        _bgmVolumeContainer.Initialize(text.OptionsBgmVolume, audioSettings.BgmVolume);
+        _sfxVolumeContainer.Initialize(text.OptionsSfxVolume, audioSettings.SfxVolume);
 
         var graphicsSettings = view.Graphics;
         _resolutionOptionButton.Disabled = graphicsSettings.Fullscreen;
 
         // 初始化全屏选项
-        _fullscreenOptionButton.Clear();
-        _fullscreenOptionButton.AddItem("全屏");
-        _fullscreenOptionButton.AddItem("窗口化");
-        _fullscreenOptionButton.Selected = graphicsSettings.Fullscreen ? 0 : 1;
+        PopulateFullscreenOptions(text, graphicsSettings.Fullscreen);
         // 初始化分辨率选项
         _resolutionOptionButton.Clear();
         for (var i = 0; i < _resolutions.Length; i++)
@@ -180,11 +185,8 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
         }
 
         var localizationSettings = view.Localization;
-        _languageOptionButton.Clear();
-        _languageOptionButton.AddItem("简体中文");
-        _languageOptionButton.AddItem("English");
-        _languageOptionButton.Selected =
-            string.Equals(localizationSettings.Language, "简体中文", StringComparison.Ordinal) ? 0 : 1;
+        PopulateLanguageOptions(text, localizationSettings.Language);
+        ApplyMenuTexts(text);
         _initializing = false;
     }
 
@@ -229,12 +231,13 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
         if (_initializing) return;
 
         // 根据索引获取对应的语言
-        var language = index == 0 ? "简体中文" : "English";
+        var language = index == 0 ? ChineseLanguageValue : EnglishLanguageValue;
 
         // 发送更改语言命令
         await this.SendCommandAsync(new ChangeLanguageCommand(new ChangeLanguageCommandInput
             { Language = language })).ConfigureAwait(true);
 
+        RefreshLocalizedTexts(language);
         _log.Debug($"语言更改为: {language}");
     }
 
@@ -257,6 +260,7 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     /// <param name="index">选择的全屏模式索引</param>
     private async Task OnFullscreenChanged(long index)
     {
+        if (_initializing) return;
         var fullscreen = index == 0;
         await this.SendCommandAsync(new ToggleFullscreenCommand(new ToggleFullscreenCommandInput
             { Fullscreen = fullscreen })).ConfigureAwait(true);
@@ -301,5 +305,58 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
                 else
                     _log.Warn("页面句柄为空，无法隐藏页面");
             });
+    }
+
+    private void RefreshLocalizedTexts(string selectedLanguage)
+    {
+        _initializing = true;
+        var text = _contentCatalog.GetMenuText();
+        ApplyMenuTexts(text);
+        PopulateFullscreenOptions(text, _fullscreenOptionButton.Selected == 0);
+        PopulateLanguageOptions(text, selectedLanguage);
+        _initializing = false;
+    }
+
+    private void ApplyMenuTexts(MenuTextConfig text)
+    {
+        GetNode<Label>("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Title").Text =
+            text.OptionsTitle;
+        GetNode<Label>("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Audio/Title").Text =
+            text.OptionsAudioTitle;
+        GetNode<Label>("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Graphics/Title").Text =
+            text.OptionsGraphicsTitle;
+        GetNode<Label>("Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Localization/Title").Text =
+            text.OptionsLocalizationTitle;
+        GetNode<Label>(
+                "Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Graphics/MarginContainer/FullscreenContainer/FullscreenLabel")
+            .Text = text.OptionsFullscreenLabel;
+        GetNode<Label>(
+                "Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Graphics/MarginContainer2/ResolutionContainer/ResolutionLabel")
+            .Text = text.OptionsResolutionLabel;
+        GetNode<Label>(
+                "Panel/MarginContainer/HBoxContainer/MarginContainer/HBoxContainer/Localization/MarginContainer/LanguageContainer/LanguageLabel")
+            .Text = text.OptionsLanguageLabel;
+        GetNode<Button>("%Back").Text = text.OptionsBack;
+
+        _masterVolumeContainer.SetTitle(text.OptionsMasterVolume);
+        _bgmVolumeContainer.SetTitle(text.OptionsBgmVolume);
+        _sfxVolumeContainer.SetTitle(text.OptionsSfxVolume);
+    }
+
+    private void PopulateFullscreenOptions(MenuTextConfig text, bool fullscreen)
+    {
+        _fullscreenOptionButton.Clear();
+        _fullscreenOptionButton.AddItem(text.OptionsFullscreen);
+        _fullscreenOptionButton.AddItem(text.OptionsWindowed);
+        _fullscreenOptionButton.Selected = fullscreen ? 0 : 1;
+    }
+
+    private void PopulateLanguageOptions(MenuTextConfig text, string selectedLanguage)
+    {
+        _languageOptionButton.Clear();
+        _languageOptionButton.AddItem(text.OptionsLanguageZh);
+        _languageOptionButton.AddItem(text.OptionsLanguageEn);
+        _languageOptionButton.Selected =
+            string.Equals(selectedLanguage, ChineseLanguageValue, StringComparison.Ordinal) ? 0 : 1;
     }
 }

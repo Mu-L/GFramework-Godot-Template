@@ -17,7 +17,7 @@ public abstract partial class GameInputController : Node, IController
 
     /// <summary>
     ///     处理输入事件的主入口方法
-    ///     该方法会分发全局输入事件以及根据游戏暂停状态分发 gameplay 或 paused 阶段的输入事件
+    ///     该方法会分发全局输入事件以及根据游戏暂停状态分发 running 或 paused 阶段的输入事件
     /// </summary>
     /// <param name="event">输入事件对象</param>
     public override void _Input(InputEvent @event)
@@ -26,14 +26,14 @@ public abstract partial class GameInputController : Node, IController
 
         Dispatch(InputPhase.Global, @event);
 
-        Dispatch(pausedAtFrameStart ? InputPhase.Paused : InputPhase.Gameplay, @event);
+        Dispatch(pausedAtFrameStart ? InputPhase.Paused : InputPhase.Playing, @event);
     }
 
     /// <summary>
     ///     分发输入事件到具体的处理逻辑
     ///     该方法会检查当前阶段是否被接受以及是否被阻塞，若满足条件则调用 Handle 方法进行处理
     /// </summary>
-    /// <param name="phase">输入阶段（如 Global、Gameplay、Paused）</param>
+    /// <param name="phase">输入阶段（如 Global、Playing、Paused）</param>
     /// <param name="event">输入事件对象</param>
     private void Dispatch(InputPhase phase, InputEvent @event)
     {

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 GeWuYou
+﻿// Copyright (c) 2026 GeWuYou
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,9 +18,9 @@ namespace GFrameworkGodotTemplate.scripts.cqrs.audio.events;
 ///     负责处理BgmChangedEvent事件，通过音频系统切换背景音乐
 ///     继承自AbstractNotificationHandler，专门处理背景音乐切换相关的通知消息
 /// </summary>
-public class BgmChangedHandler : AbstractNotificationHandler<BgmChangedEvent>
+public partial class BgmChangedHandler : AbstractNotificationHandler<BgmChangedEvent>
 {
-    private IAudioSystem? _audioSystem;
+    [GetSystem] private IAudioSystem _audioSystem = null!;
 
     /// <summary>
     ///     处理背景音乐变更事件
@@ -31,7 +31,7 @@ public class BgmChangedHandler : AbstractNotificationHandler<BgmChangedEvent>
     /// <returns>异步任务，表示音乐切换操作的完成</returns>
     public override ValueTask Handle(BgmChangedEvent notification, CancellationToken cancellationToken)
     {
-        _audioSystem ??= this.GetSystem<IAudioSystem>()!;
+        __InjectContextBindings_Generated();
         _audioSystem.PlayBgm(notification.BgmType);
         return ValueTask.CompletedTask;
     }

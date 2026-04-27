@@ -1,4 +1,4 @@
-// Copyright (c) 2026 GeWuYou
+﻿// Copyright (c) 2026 GeWuYou
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,9 +22,11 @@ namespace GFrameworkGodotTemplate.scripts.cqrs.global.events;
 ///     负责处理UiRootReadyEvent事件，当UI根节点准备就绪时触发状态机切换
 ///     继承自AbstractNotificationHandler，专门处理UI就绪相关的通知消息
 /// </summary>
-public class UiRootReadyHandler : AbstractNotificationHandler<UiRootReadyEvent>
+public partial class UiRootReadyHandler : AbstractNotificationHandler<UiRootReadyEvent>
 {
-    private IStateMachineSystem? _stateMachine;
+    [GetUtility] private IGodotSceneRegistry _sceneRegistry = null!;
+
+    [GetSystem] private IStateMachineSystem _stateMachine = null!;
 
     /// <summary>
     ///     处理UI根节点就绪事件
@@ -35,11 +37,11 @@ public class UiRootReadyHandler : AbstractNotificationHandler<UiRootReadyEvent>
     /// <returns>异步任务，表示状态切换操作的完成</returns>
     public override async ValueTask Handle(UiRootReadyEvent notification, CancellationToken cancellationToken)
     {
+        __InjectContextBindings_Generated();
         // 检查是否应该进入主菜单状态，如果是则注册UI根节点就绪事件来切换到主菜单状态
         if (ShouldEnterMainMenu())
             // 获取状态机系统实例并切换到启动状态
-            await (_stateMachine ??= this.GetSystem<IStateMachineSystem>()!)
-                .ChangeToAsync<BootStartState>().ConfigureAwait(true);
+            await _stateMachine.ChangeToAsync<BootStartState>().ConfigureAwait(true);
     }
 
     /// <summary>
@@ -55,7 +57,7 @@ public class UiRootReadyHandler : AbstractNotificationHandler<UiRootReadyEvent>
             return false;
 
         var scenePath = currentScene.SceneFilePath;
-        return string.Equals(scenePath, this.GetUtility<IGodotSceneRegistry>()!.Get(nameof(SceneKey.Main)).GetPath(),
+        return string.Equals(scenePath, _sceneRegistry.Get(nameof(SceneKey.Main)).GetPath(),
             StringComparison.Ordinal);
     }
 }

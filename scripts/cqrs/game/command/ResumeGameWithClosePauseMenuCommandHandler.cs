@@ -1,5 +1,4 @@
-using GFrameworkGodotTemplate.scripts.cqrs.pause_menu.command;
-using Unit = Mediator.Unit;
+﻿using GFrameworkGodotTemplate.scripts.cqrs.pause_menu.command;
 
 namespace GFrameworkGodotTemplate.scripts.cqrs.game.command;
 

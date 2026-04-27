@@ -1,4 +1,4 @@
-namespace GFrameworkGodotTemplate.scripts.cqrs.audio.command.input;
+﻿namespace GFrameworkGodotTemplate.scripts.cqrs.audio.command.input;
 
 /// <summary>
 ///     背景音乐音量更改命令输入类，用于传递BGM音量更改所需的参数

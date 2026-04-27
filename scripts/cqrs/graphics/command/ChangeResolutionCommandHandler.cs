@@ -1,22 +1,22 @@
-using Unit = Mediator.Unit;
-
 namespace GFrameworkGodotTemplate.scripts.cqrs.graphics.command;
 
 /// <summary>
 ///     更改分辨率命令处理器
 /// </summary>
-public class ChangeResolutionCommandHandler : AbstractCommandHandler<ChangeResolutionCommand>
+public partial class ChangeResolutionCommandHandler : AbstractCommandHandler<ChangeResolutionCommand>
 {
-    private ISettingsModel? _model;
-    private ISettingsSystem? _settingsSystem;
+    [GetModel] private ISettingsModel _model = null!;
+
+    [GetSystem] private ISettingsSystem _settingsSystem = null!;
 
     public override async ValueTask<Unit> Handle(ChangeResolutionCommand command, CancellationToken cancellationToken)
     {
+        __InjectContextBindings_Generated();
         var input = command.Input;
-        var settings = (_model ??= this.GetModel<ISettingsModel>()!).GetData<GraphicsSettings>();
+        var settings = _model.GetData<GraphicsSettings>();
         settings.ResolutionWidth = input.Width;
         settings.ResolutionHeight = input.Height;
-        await (_settingsSystem ??= this.GetSystem<ISettingsSystem>())!.Apply<GodotGraphicsSettings>()
+        await _settingsSystem.Apply<GodotGraphicsSettings>()
             .ConfigureAwait(true);
         return Unit.Value;
     }

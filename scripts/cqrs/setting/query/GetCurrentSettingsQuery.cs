@@ -19,4 +19,4 @@ namespace GFrameworkGodotTemplate.scripts.cqrs.setting.query;
 ///     获取当前设置信息的查询命令
 ///     实现CQRS模式中的查询部分，用于获取应用程序的当前设置视图
 /// </summary>
-public sealed class GetCurrentSettingsQuery : Mediator.IQuery<SettingsView>;
+public sealed class GetCurrentSettingsQuery : GFramework.Cqrs.Abstractions.Cqrs.Query.IQuery<SettingsView>;

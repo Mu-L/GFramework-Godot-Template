@@ -24,9 +24,9 @@ public enum InputPhase
     Global,
 
     /// <summary>
-    ///     游戏进行中的输入处理阶段，仅在游戏未暂停时生效。
+    ///     运行中的输入处理阶段，仅在未暂停时生效。
     /// </summary>
-    Gameplay,
+    Playing,
 
     /// <summary>
     ///     暂停状态下的输入处理阶段，仅在游戏暂停时生效。

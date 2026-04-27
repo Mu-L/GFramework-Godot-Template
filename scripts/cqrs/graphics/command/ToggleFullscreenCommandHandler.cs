@@ -1,4 +1,4 @@
-// Copyright (c) 2026 GeWuYou
+﻿// Copyright (c) 2026 GeWuYou
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Unit = Mediator.Unit;
 
 namespace GFrameworkGodotTemplate.scripts.cqrs.graphics.command;
 
@@ -19,9 +18,11 @@ namespace GFrameworkGodotTemplate.scripts.cqrs.graphics.command;
 ///     切换全屏模式命令处理器类
 ///     负责处理ToggleFullscreenCommand命令，更新图形设置并应用更改
 /// </summary>
-public class ToggleFullscreenCommandHandler : AbstractCommandHandler<ToggleFullscreenCommand>
+public partial class ToggleFullscreenCommandHandler : AbstractCommandHandler<ToggleFullscreenCommand>
 {
-    private ISettingsModel? _model;
+    [GetModel] private ISettingsModel _model = null!;
+
+    [GetSystem] private ISettingsSystem _settingsSystem = null!;
 
     /// <summary>
     ///     处理切换全屏模式命令的核心方法
@@ -31,12 +32,22 @@ public class ToggleFullscreenCommandHandler : AbstractCommandHandler<ToggleFulls
     /// <returns>表示操作完成的Unit值</returns>
     public override async ValueTask<Unit> Handle(ToggleFullscreenCommand command, CancellationToken cancellationToken)
     {
-        // 更新图形设置中的全屏状态
-        (_model ??= this.GetModel<ISettingsModel>()!).GetData<GraphicsSettings>().Fullscreen = command.Input.Fullscreen;
+        __InjectContextBindings_Generated();
+        cancellationToken.ThrowIfCancellationRequested();
 
-        // 应用图形设置更改到Godot引擎
-        await this.GetSystem<ISettingsSystem>()!.Apply<GodotGraphicsSettings>().ConfigureAwait(true);
+        var settings = _model.GetData<GraphicsSettings>();
+        var previousFullscreen = settings.Fullscreen;
+        settings.Fullscreen = command.Input.Fullscreen;
 
-        return await ValueTask.FromResult(Unit.Value).ConfigureAwait(true);
+        try
+        {
+            await _settingsSystem.Apply<GodotGraphicsSettings>().ConfigureAwait(true);
+            return Unit.Value;
+        }
+        catch
+        {
+            settings.Fullscreen = previousFullscreen;
+            throw;
+        }
     }
 }

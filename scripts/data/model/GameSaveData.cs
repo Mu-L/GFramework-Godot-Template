@@ -6,7 +6,7 @@ namespace GFrameworkGodotTemplate.scripts.data.model;
 ///     游戏存档数据类，用于存储游戏进度相关的序列化数据
 ///     包含版本控制、保存时间、槽位描述等基本信息
 /// </summary>
-public class GameSaveData
+public class GameSaveData : IData
 {
     /// <summary>
     ///     存档版本号，用于处理不同版本间的兼容性
