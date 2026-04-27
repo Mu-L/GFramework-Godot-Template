@@ -42,8 +42,7 @@
     "optionsUnsavedApplyAndExit",
     "optionsUnsavedDiscardAndExit",
     "optionsSaveFailed",
-    "optionsSaved",
-    "optionsPageHandleEmpty"
+    "optionsSaved"
   ],
   "properties": {
     "id": {
@@ -100,9 +99,6 @@
     },
     "optionsSaveFailed": { "type": "string" },
     "optionsSaved": {
-      "type": "string"
-    },
-    "optionsPageHandleEmpty": {
       "type": "string"
     }
   },

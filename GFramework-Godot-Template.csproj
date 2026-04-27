@@ -7,7 +7,7 @@
         <Nullable>enable</Nullable>
         <LangVersion>preview</LangVersion>
         <EnableGFrameworkGlobalUsings>true</EnableGFrameworkGlobalUsings>
-        <UseLocalGFrameworkWorkspace Condition="'$(UseLocalGFrameworkWorkspace)' == '' and Exists('..\GFramework\GFramework.Game\GFramework.Game.csproj')">false</UseLocalGFrameworkWorkspace>
+        <UseLocalGFrameworkWorkspace Condition="'$(UseLocalGFrameworkWorkspace)' == '' and Exists('..\GFramework\GFramework.Game\GFramework.Game.csproj')">true</UseLocalGFrameworkWorkspace>
         <UseLocalGFrameworkWorkspace Condition="'$(UseLocalGFrameworkWorkspace)' == ''">false</UseLocalGFrameworkWorkspace>
     </PropertyGroup>
     <ItemGroup>

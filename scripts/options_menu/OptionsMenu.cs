@@ -158,7 +158,6 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
     /// </summary>
     public override void _ExitTree()
     {
-        RevertPendingAudioPreviewIfNeededAsync().GetAwaiter().GetResult();
         this.UnRegisterEvent<SettingsAppliedEvent<ISettingsSection>>(OnSettingsApplied);
         _localizationManager?.UnsubscribeFromLanguageChange(OnCurrentLanguageChanged);
     }
@@ -468,9 +467,17 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
         ClosePage();
     }
 
-    private void ClosePage()
+    private async void ClosePage()
     {
-        RevertPendingAudioPreviewIfNeededAsync().GetAwaiter().GetResult();
+        try
+        {
+            await RevertPendingAudioPreviewIfNeededAsync().ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            _log.Error("恢复音频预览设置失败。", ex);
+        }
+
         ResetPendingSettingsToApplied();
         RefreshLocalizedUi();
         var handle = GetPage().Handle;
@@ -480,7 +487,7 @@ public partial class OptionsMenu : Control, IController, IUiPageBehaviorProvider
             return;
         }
 
-        _log.Warn(_contentCatalog.GetMenuText().OptionsPageHandleEmpty);
+        _log.Warn("Options page handle is null, cannot hide page.");
     }
 
     private void OnCurrentLanguageChanged(string _)

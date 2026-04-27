@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://k63bfqjv8kq3" path="res://scripts/options_menu/OptionsMenu.cs" id="1_44mp6"]
 [ext_resource type="PackedScene" path="res://scenes/ui/component/confirm_dialog.tscn" id="2_confirm_dialog"]
 [ext_resource type="Theme" uid="uid://drg0lvsgoqfsc" path="res://resource/theme/project_theme.tres" id="3_025dt"]
-[ext_resource type="Script" path="res://scripts/ui/component/HoverEffect.cs" id="99_hover"]
+[ext_resource type="Script" uid="uid://clyyndxt3is4e" path="res://scripts/ui/component/HoverEffect.cs" id="99_hover"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_025dt"]
 texture_margin_left = 64.0

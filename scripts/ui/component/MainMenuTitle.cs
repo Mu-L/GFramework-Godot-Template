@@ -5,9 +5,13 @@ namespace GFrameworkGodotTemplate.scripts.ui.component;
 /// <summary>
 ///     主菜单标题绘制组件，提供字距、轻描边、微发光和横向渐变。
 /// </summary>
+[Tool]
 public partial class MainMenuTitle : Control
 {
     private string _text = GetDefaultTitleText();
+    private int _fontSize = 72;
+    private float _characterSpacing = 5f;
+    private float _glowAlpha = 0.18f;
 
     /// <summary>
     ///     标题文本。
@@ -27,19 +31,52 @@ public partial class MainMenuTitle : Control
     ///     标题字号。
     /// </summary>
     [Export]
-    public int FontSize { get; set; } = 72;
+    public int FontSize
+    {
+        get => _fontSize;
+        set
+        {
+            if (_fontSize == value)
+                return;
+
+            _fontSize = value;
+            QueueRedraw();
+        }
+    }
 
     /// <summary>
     ///     字符间距。
     /// </summary>
     [Export]
-    public float CharacterSpacing { get; set; } = 5f;
+    public float CharacterSpacing
+    {
+        get => _characterSpacing;
+        set
+        {
+            if (Mathf.IsEqualApprox(_characterSpacing, value))
+                return;
+
+            _characterSpacing = value;
+            QueueRedraw();
+        }
+    }
 
     /// <summary>
     ///     微发光强度。
     /// </summary>
     [Export]
-    public float GlowAlpha { get; set; } = 0.18f;
+    public float GlowAlpha
+    {
+        get => _glowAlpha;
+        set
+        {
+            if (Mathf.IsEqualApprox(_glowAlpha, value))
+                return;
+
+            _glowAlpha = value;
+            QueueRedraw();
+        }
+    }
 
     private static string GetDefaultTitleText()
     {

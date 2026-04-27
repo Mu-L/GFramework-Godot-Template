@@ -105,6 +105,7 @@ public partial class PauseMenu : Control, IController, IUiPageBehaviorProvider, 
         __InjectGetNodes_Generated();
         __InjectContextBindings_Generated();
         SetupEventHandlers();
+        ConfigureUnavailableActions();
         _stateMachineSystem = this.GetSystem<IStateMachineSystem>()!;
         _localizationManager = this.GetSystem<ILocalizationManager>()!;
         _localizationManager.SubscribeToLanguageChange(OnLanguageChanged);
@@ -132,16 +133,6 @@ public partial class PauseMenu : Control, IController, IUiPageBehaviorProvider, 
                 Handle = GetPage().Handle!.Value
             }));
         };
-        // 绑定保存游戏按钮点击事件
-        _saveButton.Pressed += () =>
-        {
-            // 在此保存游戏
-            this.SendCommand(new ResumeGameWithClosePauseMenuCommand(new ClosePauseMenuCommandInput
-            {
-                Handle = GetPage().Handle!.Value
-            }));
-            _log.Debug("保存游戏");
-        };
         // 绑定加载游戏按钮点击事件
         _loadButton.Pressed += () => { _log.Debug("加载游戏"); };
         // 绑定选项按钮点击事件
@@ -159,6 +150,11 @@ public partial class PauseMenu : Control, IController, IUiPageBehaviorProvider, 
 
         // 绑定退出游戏按钮点击事件
         _quitButton.Pressed += () => this.RunCommandCoroutine(new ExitGameCommand());
+    }
+
+    private void ConfigureUnavailableActions()
+    {
+        _saveButton.Disabled = true;
     }
 
     /// <summary>

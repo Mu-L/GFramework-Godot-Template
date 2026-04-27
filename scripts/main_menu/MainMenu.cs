@@ -69,6 +69,7 @@ public partial class MainMenu : Control, IController, IUiPageBehaviorProvider, I
         _localizationManager.SubscribeToLanguageChange(OnLanguageChanged);
         this.RegisterEvent<SettingsAppliedEvent<ISettingsSection>>(OnSettingsApplied);
         SetupEventHandlers();
+        ConfigureUnavailableActions();
         ApplyStaticText();
     }
 
@@ -92,6 +93,11 @@ public partial class MainMenu : Control, IController, IUiPageBehaviorProvider, I
         {
             _stateMachineSystem.ChangeToAsync<PlayingState>().ToCoroutineEnumerator().RunCoroutine();
         };
+    }
+
+    private void ConfigureUnavailableActions()
+    {
+        _continueGameButton.Disabled = true;
     }
 
     private void ApplyStaticText()

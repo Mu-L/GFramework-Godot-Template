@@ -45,9 +45,7 @@ public static class TemplateBundledConfigCache
     public static void SynchronizeToCache(string sourceRootPath, string cacheRootPath)
     {
         var cacheRootAbsolutePath = ToAbsolutePath(cacheRootPath);
-        if (Directory.Exists(cacheRootAbsolutePath)) Directory.Delete(cacheRootAbsolutePath, true);
-
-        Directory.CreateDirectory(cacheRootAbsolutePath);
+        var synchronizedFiles = new Dictionary<string, byte[]>(StringComparer.Ordinal);
 
         foreach (var relativePath in BundledConfigFiles)
         {
@@ -57,11 +55,31 @@ public static class TemplateBundledConfigCache
                     $"Bundled config file '{sourcePath}' was not found while synchronizing the runtime cache.",
                     sourcePath);
 
-            var targetPath = ToAbsolutePath(TemplateContentPathResolver.CombinePath(cacheRootPath, relativePath));
-            var parentDirectory = Path.GetDirectoryName(targetPath);
-            if (!string.IsNullOrWhiteSpace(parentDirectory)) Directory.CreateDirectory(parentDirectory);
+            synchronizedFiles.Add(relativePath, bytes);
+        }
 
-            File.WriteAllBytes(targetPath, bytes);
+        var temporaryCacheRootPath = $"{cacheRootAbsolutePath}.tmp-{Guid.NewGuid():N}";
+        try
+        {
+            Directory.CreateDirectory(temporaryCacheRootPath);
+
+            foreach (var (relativePath, bytes) in synchronizedFiles)
+            {
+                var targetPath = Path.Combine(
+                    temporaryCacheRootPath,
+                    relativePath.Replace('/', Path.DirectorySeparatorChar));
+                var parentDirectory = Path.GetDirectoryName(targetPath);
+                if (!string.IsNullOrWhiteSpace(parentDirectory)) Directory.CreateDirectory(parentDirectory);
+
+                File.WriteAllBytes(targetPath, bytes);
+            }
+
+            if (Directory.Exists(cacheRootAbsolutePath)) Directory.Delete(cacheRootAbsolutePath, true);
+            Directory.Move(temporaryCacheRootPath, cacheRootAbsolutePath);
+        }
+        finally
+        {
+            if (Directory.Exists(temporaryCacheRootPath)) Directory.Delete(temporaryCacheRootPath, true);
         }
     }
 

@@ -53,11 +53,16 @@ public sealed class TemplateConfigHost : IDisposable
 
     public void Dispose()
     {
+        IConfigRegistry? registryToDispose = null;
+
         lock (_gate)
         {
             if (_disposed) return;
             _disposed = true;
+            registryToDispose = _registry;
         }
+
+        if (registryToDispose is IDisposable disposableRegistry) disposableRegistry.Dispose();
     }
 
     private static IReadOnlyCollection<GodotYamlConfigTableSource> CreateTableSources()

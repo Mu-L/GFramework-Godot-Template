@@ -271,26 +271,43 @@ public abstract partial class BaseAnimatedDockPanel : Control, IController
         if (Visible == visible)
             return;
 
-        if (!visible || !animate)
+        StopTransition();
+        if (!animate)
         {
-            StopTransition();
             Visible = visible;
+            SetModulateAlpha(1f);
             if (visible)
                 RefreshLayout();
 
             return;
         }
 
-        StopTransition();
-        Modulate = new Color(Modulate);
-        var tween = CreateTween();
-        tween.SetTrans(TransitionType);
-        tween.SetEase(EaseType);
-        tween.TweenProperty(this, "modulate:a", 0f, AnimationDuration);
-        tween.Finished += () =>
+        if (visible)
+        {
+            Visible = true;
+            RefreshLayout();
+            SetModulateAlpha(0f);
+            _transitionTween = CreateTween();
+            _transitionTween.SetTrans(TransitionType);
+            _transitionTween.SetEase(EaseType);
+            _transitionTween.TweenProperty(this, "modulate:a", 1f, AnimationDuration);
+            _transitionTween.Finished += () =>
+            {
+                SetModulateAlpha(1f);
+                _transitionTween = null;
+            };
+            return;
+        }
+
+        _transitionTween = CreateTween();
+        _transitionTween.SetTrans(TransitionType);
+        _transitionTween.SetEase(EaseType);
+        _transitionTween.TweenProperty(this, "modulate:a", 0f, AnimationDuration);
+        _transitionTween.Finished += () =>
         {
             Visible = false;
-            Modulate = new Color(Modulate);
+            SetModulateAlpha(1f);
+            _transitionTween = null;
         };
     }
 
@@ -425,6 +442,11 @@ public abstract partial class BaseAnimatedDockPanel : Control, IController
     {
         _transitionTween?.Kill();
         _transitionTween = null;
+    }
+
+    private void SetModulateAlpha(float alpha)
+    {
+        Modulate = new Color(Modulate.R, Modulate.G, Modulate.B, alpha);
     }
 
     private void ApplyProgress(float progress)

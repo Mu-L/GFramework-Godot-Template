@@ -111,13 +111,13 @@ public partial class HoverEffect : Node
     /// <param name="node">待处理的节点。</param>
     private void BindTarget(Node node)
     {
-        if (ApplyToDescendants || node != Target)
+        if (ApplyToDescendants)
         {
             BindButtonsRecursive(node);
             return;
         }
 
-        if (node is BaseButton button) BindButton(button);
+        if (node == Target && node is BaseButton button) BindButton(button);
     }
 
     /// <summary>

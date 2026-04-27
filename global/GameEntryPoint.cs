@@ -16,6 +16,7 @@ namespace GFrameworkGodotTemplate.global;
 [ContextAware]
 public partial class GameEntryPoint : Node
 {
+    private bool _quitRequested;
     private IGodotSceneRegistry _sceneRegistry = null!;
     private ISettingsModel _settingsModel = null!;
     private ISettingsSystem _settingsSystem = null!;
@@ -41,10 +42,11 @@ public partial class GameEntryPoint : Node
     /// <summary>
     ///     Godot引擎调用的节点就绪方法，在此方法中初始化游戏架构和相关组件
     /// </summary>
-    public override void _Ready()
+    public override async void _Ready()
     {
         // 获取游戏根节点
         Tree = GetTree();
+        Tree.AutoAcceptQuit = false;
         // 创建并初始化游戏架构实例
         // 配置架构的日志记录属性，设置Godot日志工厂提供程序并指定最低日志级别为调试级别
         // 然后初始化架构实例以准备游戏运行环境
@@ -61,10 +63,10 @@ public partial class GameEntryPoint : Node
         Architecture.Initialize();
         _settingsModel = this.GetModel<ISettingsModel>()!;
         _settingsSystem = this.GetSystem<ISettingsSystem>()!;
-        _ = InitializeSettingsAsync();
         _sceneRegistry = this.GetUtility<IGodotSceneRegistry>()!;
         _uiRegistry = this.GetUtility<IGodotUiRegistry>()!;
         _textureRegistry = this.GetUtility<IGodotTextureRegistry>()!;
+        await InitializeSettingsAsync().ConfigureAwait(true);
         // 注册所有游戏场景配置到场景注册表中
         foreach (var gameSceneConfig in GameSceneConfigs) _sceneRegistry.Registry(gameSceneConfig);
 
@@ -112,6 +114,17 @@ public partial class GameEntryPoint : Node
             .RunCoroutine();
     }
 
+    public override void _Notification(int what)
+    {
+        if (what == (int)NotificationWMCloseRequest || what == (int)NotificationWMGoBackRequest)
+        {
+            RequestQuitAsync();
+            return;
+        }
+
+        base._Notification(what);
+    }
+
 
     /// <summary>
     ///     判断当前场景是否为主菜单场景，决定是否需要进入主菜单状态
@@ -131,17 +144,23 @@ public partial class GameEntryPoint : Node
     }
 
     /// <summary>
-    ///     当节点从场景树中移除时调用，保存当前设置数据到存储
+    ///     处理窗口关闭/返回请求，先异步保存设置再退出。
     /// </summary>
-    public override void _ExitTree()
+    private async void RequestQuitAsync()
     {
+        if (_quitRequested)
+            return;
+
+        _quitRequested = true;
         try
         {
-            _settingsSystem.SaveAll().GetAwaiter().GetResult();
+            await _settingsSystem.SaveAll().ConfigureAwait(true);
         }
         catch (Exception ex)
         {
             _log.Error("退出时保存设置失败。", ex);
         }
+
+        Tree.Quit();
     }
 }

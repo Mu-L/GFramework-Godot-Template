@@ -32,7 +32,7 @@ public partial class GetCurrentSettingsQueryHandler : AbstractQueryHandler<GetCu
     public override ValueTask<SettingsView> Handle(GetCurrentSettingsQuery query, CancellationToken cancellationToken)
     {
         __InjectContextBindings_Generated();
-        // 再此可以校验设置数据
+        // 在此可以校验设置数据
         // 构建并返回设置视图对象
         return ValueTask.FromResult(new SettingsView
         {

@@ -57,9 +57,9 @@ public partial class LocalizedTextBindings : Node
                 continue;
             }
 
-            if (!TryResolveText(binding, out var text))
+            if (!TryResolveText(binding, out var text, out var warningMessage))
             {
-                GD.PushWarning($"{nameof(LocalizedTextBindings)} text key was not found: {binding.Key}");
+                GD.PushWarning(warningMessage ?? $"{nameof(LocalizedTextBindings)} text key was not found: {binding.Key}");
                 continue;
             }
 
@@ -82,16 +82,23 @@ public partial class LocalizedTextBindings : Node
         ApplyAll();
     }
 
-    private bool TryResolveText(LocalizedTextBinding binding, out string text)
+    private bool TryResolveText(LocalizedTextBinding binding, out string text, out string? warningMessage)
     {
         text = string.Empty;
+        warningMessage = null;
         if (_contentCatalog is null) return false;
 
-        object sourceObject = binding.Source switch
+        object? sourceObject = binding.Source switch
         {
             LocalizedTextCatalogSource.Menu => _contentCatalog.GetMenuText(),
-            _ => _contentCatalog.GetMenuText()
+            _ => null
         };
+
+        if (sourceObject is null)
+        {
+            warningMessage = $"{nameof(LocalizedTextBindings)} unsupported text source: {binding.Source}";
+            return false;
+        }
 
         var property = sourceObject.GetType().GetProperty(
             binding.Key,
