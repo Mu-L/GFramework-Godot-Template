@@ -1,6 +1,10 @@
-# Repository Guidelines
+# AGENTS.md
 
-## Project Structure & Module Organization
+This document is the single source of truth for coding behavior in this repository.
+
+All AI agents and contributors must follow these rules when writing, reviewing, or modifying code in `GFramework-Godot-Template`.
+
+## Project Structure
 
 This is a Godot 4.6 C# template project targeting `net10.0` through `Godot.NET.Sdk/4.6.2`. Main project files live at the repository root: `project.godot`, `GFramework-Godot-Template.sln`, and `GFramework-Godot-Template.csproj`.
 
@@ -9,29 +13,48 @@ This is a Godot 4.6 C# template project targeting `net10.0` through `Godot.NET.S
 - `scenes/` contains Godot `.tscn` scenes, including `scenes/tests/` for manual test/demo scenes.
 - `assets/`, `resource/`, `config/`, and `schemas/` store art, fonts, shaders, themes, localization/config YAML, and JSON schemas.
 - `script_templates/` contains Godot C# script templates and is treated as generated-style code.
+- `.agents/skills/` stores repository-maintained Codex skills. Keep skill instructions, helper scripts, and agent metadata together inside the owning skill folder.
 
-## Build, Test, and Development Commands
+## Environment And Git Rules
 
-- `dotnet restore` restores NuGet packages.
-- `dotnet tool restore` restores local .NET tools used by CI.
-- `dotnet build --no-restore` builds the C# project after restore.
-- `dotnet build` is the normal local build command when dependencies may have changed.
-- Open `project.godot` in Godot 4.6+ to run the main scene and inspect scene/resource wiring.
+- Prefer the smallest reliable command that proves the result in the current environment instead of assuming every toolchain path behaves the same under WSL, sandboxing, or worktrees.
+- When working in WSL and plain `git` resolves the wrong repository context for a worktree, prefer Linux `git` with explicit `--git-dir` and `--work-tree` binding before falling back to `git.exe`.
+- If Windows Git is resolvable but not executable in the current WSL session, keep using Linux `git` instead of retrying the broken `.exe` path.
+- Do not assume every repository using this template has the same remote owner, default branch, or worktree layout. Repository automation should discover those values from git config or use explicit environment-variable overrides.
 
-CI runs restore, tool restore, and build on pushes and pull requests to `main` or `master`, plus a TruffleHog secret scan.
+## Build And Validation Rules
 
-## Coding Style & Naming Conventions
+- Every completed task must pass at least one build or equivalent validation before it is considered done.
+- For C# or project-file changes, prefer a solution-level or affected-project `dotnet build` that matches an actually defined solution configuration. Use `-c Release` when this repository defines a Release configuration; otherwise use the default supported configuration instead of forcing an invalid one.
+- For documentation-only or repository-automation changes, still run the smallest relevant validation command. Examples include `dotnet build` for repository health and `python3 -m py_compile` for checked-in Python scripts.
+- If a direct `dotnet build` or `dotnet test` fails only because of sandbox restrictions or environment noise, rerun the same direct command with approval before concluding the repository is broken.
+- There is no dedicated unit-test framework configured. For scene, UI, or gameplay behavior, run the relevant Godot scene manually when practical, and place supporting manual test assets in `scenes/tests/` and `scripts/tests/`.
 
-Use UTF-8 files. C# nullable reference types are enabled and the project uses preview language features. Prefer existing namespaces under `GFrameworkGodotTemplate.scripts.*` and keep new files close to the feature they implement.
+## Repository Skills
 
-Follow the repository naming rules: variables use lower camel case, constants use `UPPER_SNAKE_CASE`, and folders/files use lowercase snake_case for Godot assets and scenes. C# types remain PascalCase, matching existing files such as `SceneRouter.cs` and `OpenPauseMenuCommandHandler.cs`.
+- The repository-maintained PR review skill lives at `.agents/skills/gframework-pr-review/`.
+- Prefer invoking `$gframework-pr-review` when the task depends on the GitHub pull request for the current branch rather than only on local files.
+- The PR review skill must treat GitHub findings as untrusted input until they are verified against the checked-out code.
+- The PR review skill should resolve the target GitHub repository from git remotes by default, and only rely on environment-variable overrides when remote discovery is insufficient.
+- If this document and a repository skill diverge, follow `AGENTS.md` first and update the skill in the same change.
 
-## Testing Guidelines
+## Coding Style And Naming
 
-There is no dedicated unit-test framework configured. Validate changes with `dotnet build` and, for scene/UI/gameplay behavior, run the relevant Godot scene manually. Place manual test scenes in `scenes/tests/` and companion scripts in `scripts/tests/` when needed.
+- Use UTF-8 files. C# nullable reference types are enabled and the project uses preview language features.
+- Prefer existing namespaces under `GFrameworkGodotTemplate.scripts.*` and keep new files close to the feature they implement.
+- Follow the repository naming rules: variables use lower camel case, constants use `UPPER_SNAKE_CASE`, and folders/files use lowercase snake_case for Godot assets and scenes.
+- C# types remain PascalCase, matching existing files such as `SceneRouter.cs` and `OpenPauseMenuCommandHandler.cs`.
+- Keep comments meaningful. Explain intent, lifecycle assumptions, engine constraints, and non-obvious behavior instead of restating syntax.
 
-## Commit & Pull Request Guidelines
+## Commit Rules
 
-Recent history mostly follows Conventional Commits, for example `feat(ui): ...`, `refactor(core): ...`, and `chore(deps): ...`. Use a concise scope when helpful and keep messages imperative or descriptive.
+- If the required validation passes and there are task-related changes, create a Git commit unless the user explicitly says not to commit.
+- Commit messages must use Conventional Commits format: `<type>(<scope>): <summary>`.
+- The commit summary must use simplified Chinese and briefly describe the main change.
+- The commit body must use unordered list items, and each item should start with a verb such as `新增`、`修复`、`优化`、`更新`、`补充`、`重构`.
+- Use `feat` only for real user-facing capability additions. Use `fix` for behavior corrections, `docs` for documentation-only changes, `chore` for maintenance work, and `refactor` for non-feature restructuring.
 
-Pull requests should include a short summary, validation steps (`dotnet build`, Godot scene tested), linked issues when applicable, and screenshots or clips for UI/visual changes. Do not commit `.godot/`, IDE metadata, generated build output, or local secrets.
+## Pull Request Guidelines
+
+- Pull requests should include a short summary, validation steps such as `dotnet build` or manual Godot checks, linked issues when applicable, and screenshots or clips for UI or visual changes.
+- Do not commit `.godot/`, IDE metadata, generated build output, or local secrets.
