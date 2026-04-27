@@ -20,6 +20,13 @@
 ## 框架文档
 https://qf.readthedocs.io/zh-cn/latest/QFramework_v1.0_Guide/01_introduction/01_introduction.html
 
+## 发布流程
+
+- 仓库版本号通过 `semantic-release` 根据 Conventional Commits 自动计算，并创建 `v<major>.<minor>.<patch>` 标签。
+- `feat` 会触发次版本递增，`fix`、`perf`、`refactor`、`revert` 会触发补丁版本递增，`docs`、`test`、`chore`、`build`、`ci`、`style` 默认不发版。
+- 破坏性变更必须使用 `type(scope)!:` 或 `BREAKING CHANGE:`/`BREAKING CHANGES:` 页脚，否则不会自动递增主版本号。
+- 自动打 tag 依赖仓库 secret `PAT_TOKEN` 和 `release-approval` environment；`release.yml` 在标签推送后负责导出 Godot 构建并创建 GitHub Release。
+
 ## 许可证
 
 ### 源代码

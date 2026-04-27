@@ -53,6 +53,10 @@ This is a Godot 4.6 C# template project targeting `net10.0` through `Godot.NET.S
 - The commit summary must use simplified Chinese and briefly describe the main change.
 - The commit body must use unordered list items, and each item should start with a verb such as `新增`、`修复`、`优化`、`更新`、`补充`、`重构`.
 - Use `feat` only for real user-facing capability additions. Use `fix` for behavior corrections, `docs` for documentation-only changes, `chore` for maintenance work, and `refactor` for non-feature restructuring.
+- Release versioning is computed by `.releaserc.json` through `semantic-release`, so commit types must match the intended release impact instead of being chosen loosely.
+- Version mapping is fixed: `feat` releases `minor`, `fix`/`perf`/`refactor`/`revert` release `patch`, and `docs`/`test`/`chore`/`build`/`ci`/`style` do not release.
+- Any breaking change must use the Conventional Commits `!` marker or a `BREAKING CHANGE:` / `BREAKING CHANGES:` footer; otherwise the automated version will not advance to `major`.
+- Do not hide feature or behavior-fix work under non-releasing types such as `docs` or `chore`, and do not mix unrelated release semantics into a single commit unless the highest required version bump is intentional.
 
 ## Pull Request Guidelines
 
