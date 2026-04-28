@@ -22,10 +22,14 @@ https://qf.readthedocs.io/zh-cn/latest/QFramework_v1.0_Guide/01_introduction/01_
 
 ## 发布流程
 
-- 仓库版本号通过 `semantic-release` 根据 Conventional Commits 自动计算，并创建 `v<major>.<minor>.<patch>` 标签。
+- 仓库版本号通过 `semantic-release` 根据 Conventional Commits 自动计算。
 - `feat` 会触发次版本递增，`fix`、`perf`、`refactor`、`revert` 会触发补丁版本递增，`docs`、`test`、`chore`、`build`、`ci`、`style` 默认不发版。
 - 破坏性变更必须使用 `type(scope)!:` 或 `BREAKING CHANGE:`/`BREAKING CHANGES:` 页脚，否则不会自动递增主版本号。
-- 自动打 tag 依赖仓库 secret `PAT_TOKEN` 和 `release-approval` environment；`publish.yml` 在标签推送后负责导出 Godot 构建并创建 GitHub Release。
+- 正式发布需要手动在 Actions 页面运行 `Semantic Release Version and Tag` 工作流，并将 `mode` 设为 `publish`。
+- 若当前没有可发布的提交，工作流会直接跳过，不会创建 tag 或 GitHub Release。
+- 若存在可发布版本，需要通过 `release-approval` environment 审批后，才会创建 tag 并触发 `publish.yml` 导出 Godot 构建。
+- 如需提前预览版本号，可将 `mode` 设为 `preview`；该模式不会创建 tag 或 GitHub Release。
+- 发布依赖仓库 secret `PAT_TOKEN` 和 `release-approval` environment。
 
 ## 许可证
 
