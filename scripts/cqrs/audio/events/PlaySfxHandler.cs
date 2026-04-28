@@ -1,4 +1,4 @@
-// Copyright (c) 2026 GeWuYou
+﻿// Copyright (c) 2026 GeWuYou
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,9 +18,9 @@ namespace GFrameworkGodotTemplate.scripts.cqrs.audio.events;
 ///     负责处理PlaySfxEvent事件，通过音频系统播放音效
 ///     继承自AbstractNotificationHandler，专门处理音效播放相关的通知消息
 /// </summary>
-public class PlaySfxHandler : AbstractNotificationHandler<PlaySfxEvent>
+public partial class PlaySfxHandler : AbstractNotificationHandler<PlaySfxEvent>
 {
-    private IAudioSystem? _audioSystem;
+    [GetSystem] private IAudioSystem _audioSystem = null!;
 
     /// <summary>
     ///     处理音效播放事件
@@ -31,7 +31,7 @@ public class PlaySfxHandler : AbstractNotificationHandler<PlaySfxEvent>
     /// <returns>异步任务，表示音效播放操作的完成</returns>
     public override ValueTask Handle(PlaySfxEvent notification, CancellationToken cancellationToken)
     {
-        _audioSystem ??= this.GetSystem<IAudioSystem>()!;
+        __InjectContextBindings_Generated();
         _audioSystem.PlaySfx(notification.SfxType);
         return ValueTask.CompletedTask;
     }

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 GeWuYou
+﻿// Copyright (c) 2026 GeWuYou
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,10 +19,10 @@ namespace GFrameworkGodotTemplate.scripts.cqrs.pause_menu.command;
 ///     打开暂停菜单命令处理器类，负责处理打开暂停菜单的命令逻辑
 ///     继承自AbstractCommandHandler，专门处理OpenPauseMenuCommand类型的命令，返回UiHandle结果
 /// </summary>
-public sealed class OpenPauseMenuCommandHandler
+public sealed partial class OpenPauseMenuCommandHandler
     : AbstractCommandHandler<OpenPauseMenuCommand, UiHandle>
 {
-    private IUiRouter? _uiRouter;
+    [GetSystem] private IUiRouter _uiRouter = null!;
 
     /// <summary>
     ///     处理打开暂停菜单命令的核心方法
@@ -35,16 +35,16 @@ public sealed class OpenPauseMenuCommandHandler
         OpenPauseMenuCommand command,
         CancellationToken cancellationToken)
     {
+        __InjectContextBindings_Generated();
         var input = command.Input;
         var handle = input.Handle;
-        _uiRouter ??= this.GetSystem<IUiRouter>();
         if (!handle.HasValue)
             return ValueTask.FromResult(
-                _uiRouter!.Show(PauseMenu.UiKeyStr, UiLayer.Modal));
+                _uiRouter.Show(PauseMenu.UiKeyStr, UiLayer.Modal));
 
         var h = handle.Value;
 
-        if (_uiRouter!.GetFromLayer(h, UiLayer.Modal) is null)
+        if (_uiRouter.GetFromLayer(h, UiLayer.Modal) is null)
             return ValueTask.FromResult(
                 _uiRouter.Show(PauseMenu.UiKeyStr, UiLayer.Modal));
 

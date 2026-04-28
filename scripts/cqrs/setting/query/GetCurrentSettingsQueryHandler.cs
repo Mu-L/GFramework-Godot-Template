@@ -1,4 +1,4 @@
-// Copyright (c) 2026 GeWuYou
+﻿// Copyright (c) 2026 GeWuYou
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,8 +19,10 @@ namespace GFrameworkGodotTemplate.scripts.cqrs.setting.query;
 ///     当前设置查询处理器
 ///     处理获取当前设置信息的查询请求，从设置模型中提取各类设置数据并构建成视图对象
 /// </summary>
-public class GetCurrentSettingsQueryHandler : AbstractQueryHandler<GetCurrentSettingsQuery, SettingsView>
+public partial class GetCurrentSettingsQueryHandler : AbstractQueryHandler<GetCurrentSettingsQuery, SettingsView>
 {
+    [GetModel] private ISettingsModel _settingsModel = null!;
+
     /// <summary>
     ///     处理获取当前设置的查询请求
     /// </summary>
@@ -29,15 +31,14 @@ public class GetCurrentSettingsQueryHandler : AbstractQueryHandler<GetCurrentSet
     /// <returns>包含音频、图形和本地化设置的设置视图对象</returns>
     public override ValueTask<SettingsView> Handle(GetCurrentSettingsQuery query, CancellationToken cancellationToken)
     {
-        // 从模型中获取设置数据
-        var model = this.GetModel<ISettingsModel>()!;
-        // 再此可以校验设置数据
+        __InjectContextBindings_Generated();
+        // 在此可以校验设置数据
         // 构建并返回设置视图对象
         return ValueTask.FromResult(new SettingsView
         {
-            Audio = model.GetData<AudioSettings>(),
-            Graphics = model.GetData<GraphicsSettings>(),
-            Localization = model.GetData<LocalizationSettings>()
+            Audio = _settingsModel.GetData<AudioSettings>(),
+            Graphics = _settingsModel.GetData<GraphicsSettings>(),
+            Localization = _settingsModel.GetData<LocalizationSettings>()
         });
     }
 }

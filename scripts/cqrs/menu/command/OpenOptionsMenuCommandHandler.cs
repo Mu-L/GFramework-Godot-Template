@@ -1,18 +1,18 @@
-using GFrameworkGodotTemplate.scripts.options_menu;
-using Unit = Mediator.Unit;
+﻿using GFrameworkGodotTemplate.scripts.options_menu;
 
 namespace GFrameworkGodotTemplate.scripts.cqrs.menu.command;
 
 /// <summary>
 ///     打开选项菜单命令处理器
 /// </summary>
-public class OpenOptionsMenuCommandHandler : AbstractCommandHandler<OpenOptionsMenuCommand>
+public partial class OpenOptionsMenuCommandHandler : AbstractCommandHandler<OpenOptionsMenuCommand>
 {
-    private IUiRouter? _uiRouter;
+    [GetSystem] private IUiRouter _uiRouter = null!;
 
     public override ValueTask<Unit> Handle(OpenOptionsMenuCommand command, CancellationToken cancellationToken)
     {
-        (_uiRouter ??= this.GetSystem<IUiRouter>())!.Show(OptionsMenu.UiKeyStr, UiLayer.Modal);
+        __InjectContextBindings_Generated();
+        _uiRouter.Show(OptionsMenu.UiKeyStr, UiLayer.Modal);
         return ValueTask.FromResult(Unit.Value);
     }
 }

@@ -36,10 +36,13 @@ public partial class VolumeContainer : HBoxContainer, IController
     public override void _Ready()
     {
         __InjectGetNodes_Generated();
-        // 订阅滑块值改变事件
-        _volumeSlider.ValueChanged += OnSliderValueChanged;
+        __BindNodeSignals_Generated();
     }
 
+    public override void _ExitTree()
+    {
+        __UnbindNodeSignals_Generated();
+    }
 
     /// <summary>
     ///     初始化音量控制器
@@ -48,8 +51,13 @@ public partial class VolumeContainer : HBoxContainer, IController
     /// <param name="initialValue">初始音量值</param>
     public void Initialize(string title, float initialValue)
     {
-        _volumeLabel.Text = title;
+        SetTitle(title);
         SetValue(initialValue);
+    }
+
+    public void SetTitle(string title)
+    {
+        _volumeLabel.Text = title;
     }
 
     /// <summary>
@@ -66,6 +74,7 @@ public partial class VolumeContainer : HBoxContainer, IController
     ///     滑块值改变时的回调方法
     /// </summary>
     /// <param name="value">新的滑块值</param>
+    [BindNodeSignal(nameof(_volumeSlider), nameof(HSlider.ValueChanged))]
     private void OnSliderValueChanged(double value)
     {
         var v = (float)value;

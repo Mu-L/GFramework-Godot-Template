@@ -1,24 +1,16 @@
 name: Release on Tag
 
-# 触发条件：当有标签被推送到仓库时触发该工作流。
-# 支持任意格式的标签名，例如 `1.0.0` 或 `v1.0.0`。
 on:
-  #  手动触发
-  workflow_dispatch:
-# 如果触发条件满足，则执行以下步骤
-#  push:
-#    tags:
-#      - '*'   # 匹配所有标签推送事件
+  push:
+    tags:
+      - '*'
 
-# 权限设置：授予写入 contents 的权限，
-# 这样 GITHUB_TOKEN 才能调用 GitHub Releases API 创建发布。
 permissions:
   contents: write
 
-# 定义环境变量供后续步骤使用
 env:
-  GODOT_VERSION: 4.6.1               # 指定使用的 Godot 版本
-  EXPORT_NAME: GFrameworkGodotTemplate   # 导出项目名称前缀
+  GODOT_VERSION: 4.6.1
+  EXPORT_NAME: GFrameworkGodotTemplate
 
 # 工作流中的任务定义部分
 jobs:

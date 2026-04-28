@@ -1,4 +1,6 @@
 using GFrameworkGodotTemplate.scripts.data;
+using GFrameworkGodotTemplate.scripts.data.model;
+using GFrameworkGodotTemplate.scripts.config;
 using GFrameworkGodotTemplate.scripts.utility;
 using Godot;
 
@@ -18,8 +20,10 @@ public class UtilityModule : IArchitectureModule
         architecture.RegisterUtility(new GodotUiRegistry());
         architecture.RegisterUtility(new GodotSceneRegistry());
         architecture.RegisterUtility(new GodotTextureRegistry());
+        architecture.RegisterUtility(new GodotPrefabRegistry());
         architecture.RegisterUtility(new GodotUiFactory());
         architecture.RegisterUtility(new GodotSceneFactory());
+        architecture.RegisterUtility(new TemplateContentCatalog());
         var jsonSerializer = new JsonSerializer();
         architecture.RegisterUtility(jsonSerializer);
         var storage = new GodotFileStorage(jsonSerializer);
@@ -29,6 +33,13 @@ public class UtilityModule : IArchitectureModule
             {
                 BasePath = ProjectSettings.GetSetting("application/config/save/setting_path").AsString(),
                 AutoBackup = true
+            }));
+        architecture.RegisterUtility<ISaveRepository<GameSaveData>>(new SaveRepository<GameSaveData>(storage,
+            new SaveConfiguration
+            {
+                SaveRoot = ProjectSettings.GetSetting("application/config/save/save_path").AsString(),
+                SaveSlotPrefix = ProjectSettings.GetSetting("application/config/save/save_slot_prefix").AsString(),
+                SaveFileName = ProjectSettings.GetSetting("application/config/save/save_file_name").AsString()
             }));
         architecture.RegisterUtility(new SaveStorageUtility());
     }

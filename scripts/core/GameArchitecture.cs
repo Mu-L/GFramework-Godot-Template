@@ -1,5 +1,4 @@
 using GFrameworkGodotTemplate.scripts.module;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace GFrameworkGodotTemplate.scripts.core;
 
@@ -13,15 +12,6 @@ public sealed class GameArchitecture(IArchitectureConfiguration configuration, I
     : AbstractArchitecture(configuration, environment)
 {
     public IArchitectureConfiguration Configuration { get; set; } = configuration;
-
-    /// <summary>
-    ///     配置服务集合的委托，用于注册中介者模式的相关服务
-    ///     设置服务生命周期为单例模式
-    /// </summary>
-    public override Action<IServiceCollection> Configurator => collection =>
-    {
-        collection.AddMediator(options => { options.ServiceLifetime = ServiceLifetime.Singleton; });
-    };
 
     /// <summary>
     ///     安装游戏所需的各个功能模块

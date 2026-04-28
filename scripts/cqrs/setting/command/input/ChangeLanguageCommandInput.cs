@@ -1,4 +1,4 @@
-namespace GFrameworkGodotTemplate.scripts.cqrs.setting.command.input;
+﻿namespace GFrameworkGodotTemplate.scripts.cqrs.setting.command.input;
 
 /// <summary>
 ///     更改语言命令输入类

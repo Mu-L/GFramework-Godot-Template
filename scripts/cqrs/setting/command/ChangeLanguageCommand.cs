@@ -1,5 +1,4 @@
-using GFrameworkGodotTemplate.scripts.cqrs.setting.command.input;
-using Unit = Mediator.Unit;
+﻿using GFrameworkGodotTemplate.scripts.cqrs.setting.command.input;
 
 namespace GFrameworkGodotTemplate.scripts.cqrs.setting.command;
 

@@ -1,17 +1,16 @@
-using Unit = Mediator.Unit;
-
 namespace GFrameworkGodotTemplate.scripts.cqrs.setting.command;
 
 /// <summary>
 ///     重置所有设置命令处理器
 /// </summary>
-public class ResetAllSettingsCommandHandler : AbstractCommandHandler<ResetAllSettingsCommand>
+public partial class ResetAllSettingsCommandHandler : AbstractCommandHandler<ResetAllSettingsCommand>
 {
-    private ISettingsSystem? _settingsSystem;
+    [GetSystem] private ISettingsSystem _settingsSystem = null!;
 
     public override async ValueTask<Unit> Handle(ResetAllSettingsCommand command, CancellationToken cancellationToken)
     {
-        await (_settingsSystem ??= this.GetSystem<ISettingsSystem>())!.ResetAll().ConfigureAwait(true);
+        __InjectContextBindings_Generated();
+        await _settingsSystem.ResetAll().ConfigureAwait(true);
         return Unit.Value;
     }
 }

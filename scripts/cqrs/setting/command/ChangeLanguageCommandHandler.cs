@@ -1,21 +1,21 @@
-using Unit = Mediator.Unit;
-
 namespace GFrameworkGodotTemplate.scripts.cqrs.setting.command;
 
 /// <summary>
 ///     更改语言命令处理器
 /// </summary>
-public class ChangeLanguageCommandHandler : AbstractCommandHandler<ChangeLanguageCommand>
+public partial class ChangeLanguageCommandHandler : AbstractCommandHandler<ChangeLanguageCommand>
 {
-    private ISettingsModel? _model;
-    private ISettingsSystem? _settingsSystem;
+    [GetModel] private ISettingsModel _model = null!;
+
+    [GetSystem] private ISettingsSystem _settingsSystem = null!;
 
     public override async ValueTask<Unit> Handle(ChangeLanguageCommand command, CancellationToken cancellationToken)
     {
+        __InjectContextBindings_Generated();
         var input = command.Input;
-        var settings = (_model ??= this.GetModel<ISettingsModel>()!).GetData<LocalizationSettings>();
+        var settings = _model.GetData<LocalizationSettings>();
         settings.Language = input.Language;
-        await (_settingsSystem ??= this.GetSystem<ISettingsSystem>())!.Apply<GodotLocalizationSettings>()
+        await _settingsSystem.Apply<GodotLocalizationSettings>()
             .ConfigureAwait(true);
         return Unit.Value;
     }

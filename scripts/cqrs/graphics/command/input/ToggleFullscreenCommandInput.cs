@@ -1,4 +1,4 @@
-namespace GFrameworkGodotTemplate.scripts.cqrs.graphics.command.input;
+﻿namespace GFrameworkGodotTemplate.scripts.cqrs.graphics.command.input;
 
 /// <summary>
 ///     切换全屏命令输入类，用于传递全屏状态更改所需的参数

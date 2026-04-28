@@ -1,5 +1,4 @@
-using GFrameworkGodotTemplate.scripts.cqrs.audio.command.input;
-using Unit = Mediator.Unit;
+﻿using GFrameworkGodotTemplate.scripts.cqrs.audio.command.input;
 
 namespace GFrameworkGodotTemplate.scripts.cqrs.audio.command;
 
