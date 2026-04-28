@@ -1,20 +1,7 @@
 name: Semantic Release Version and Tag
 
 on:
-  workflow_run:
-    workflows: ["CI - Build"]
-    types:
-      - completed
   workflow_dispatch:
-    inputs:
-      mode:
-        description: Choose whether to only preview the next version or publish it after approval
-        required: true
-        default: preview
-        type: choice
-        options:
-          - preview
-          - publish
 
 concurrency:
   group: semantic-release-main
@@ -23,15 +10,7 @@ concurrency:
 jobs:
   preview:
     if: >
-      (
-        github.event_name == 'workflow_run' &&
-        github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.head_branch == 'main'
-      ) ||
-      (
-        github.event_name == 'workflow_dispatch' &&
-        github.ref == 'refs/heads/main'
-      )
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,45 +19,13 @@ jobs:
       last_tag: ${{ steps.semantic_release.outputs.last_release_git_tag }}
       next_version: ${{ steps.semantic_release.outputs.new_release_version }}
       next_tag: ${{ steps.semantic_release.outputs.new_release_git_tag }}
-      target_sha: ${{ steps.release_context.outputs.target_sha }}
-      target_branch: ${{ steps.release_context.outputs.target_branch }}
-      run_mode: ${{ steps.release_context.outputs.run_mode }}
-      publish_requested: ${{ steps.release_context.outputs.publish_requested }}
-      commits_since_last_tag: ${{ steps.commit_window.outputs.commits_since_last_tag }}
     steps:
-      - name: Resolve release context
-        id: release_context
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            echo "target_sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
-            echo "target_branch=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
-            echo "run_mode=auto-preview" >> "$GITHUB_OUTPUT"
-            echo "publish_requested=false" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event.inputs.mode }}" = "publish" ]; then
-            echo "target_sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-            echo "target_branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-            echo "run_mode=manual-publish" >> "$GITHUB_OUTPUT"
-            echo "publish_requested=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "target_sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-            echo "target_branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-            echo "run_mode=manual-preview" >> "$GITHUB_OUTPUT"
-            echo "publish_requested=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Print resolved context
-        run: |
-          echo "run_mode=${{ steps.release_context.outputs.run_mode }}"
-          echo "publish_requested=${{ steps.release_context.outputs.publish_requested }}"
-          echo "target_branch=${{ steps.release_context.outputs.target_branch }}"
-          echo "target_sha=${{ steps.release_context.outputs.target_sha }}"
-
       - name: Checkout code
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
-          ref: ${{ steps.release_context.outputs.target_sha }}
+          ref: ${{ github.sha }}
 
       - name: Validate PAT token
         uses: ./.github/actions/validate-pat
@@ -99,59 +46,28 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
-      - name: Count commits since last release tag
-        id: commit_window
-        env:
-          LAST_TAG: ${{ steps.semantic_release.outputs.last_release_git_tag }}
-          TARGET_SHA: ${{ steps.release_context.outputs.target_sha }}
-        run: |
-          if [ -n "${LAST_TAG}" ]; then
-            count=$(git rev-list --count "${LAST_TAG}..${TARGET_SHA}")
-          else
-            count=$(git rev-list --count "${TARGET_SHA}")
-          fi
-
-          echo "commits_since_last_tag=${count}" >> "$GITHUB_OUTPUT"
-
       - name: Show preview result
         run: |
-          echo "run_mode=${{ steps.release_context.outputs.run_mode }}"
-          echo "publish_requested=${{ steps.release_context.outputs.publish_requested }}"
           echo "published=${{ steps.semantic_release.outputs.new_release_published }}"
           echo "last_tag=${{ steps.semantic_release.outputs.last_release_git_tag }}"
-          echo "commits_since_last_tag=${{ steps.commit_window.outputs.commits_since_last_tag }}"
           echo "next_version=${{ steps.semantic_release.outputs.new_release_version }}"
           echo "next_tag=${{ steps.semantic_release.outputs.new_release_git_tag }}"
 
       - name: Write preview summary
         env:
-          RUN_MODE: ${{ steps.release_context.outputs.run_mode }}
-          COMMITS_SINCE_LAST_TAG: ${{ steps.commit_window.outputs.commits_since_last_tag }}
           RELEASE_PUBLISHED: ${{ steps.semantic_release.outputs.new_release_published }}
           RELEASE_NOTES: ${{ steps.semantic_release.outputs.new_release_notes }}
         run: |
           {
             echo "## Semantic Release Preview"
             echo
-            echo "- Workflow mode: \`${RUN_MODE}\`"
-            echo "- Branch: \`${{ steps.release_context.outputs.target_branch }}\`"
-            echo "- Commit: \`${{ steps.release_context.outputs.target_sha }}\`"
-            echo "- Last tag: \`${{ steps.semantic_release.outputs.last_release_git_tag }}\`"
-            echo "- Commits since last tag: \`${COMMITS_SINCE_LAST_TAG}\`"
+            echo "- Commit: \`${{ github.sha }}\`"
             echo "- Release needed: \`${{ steps.semantic_release.outputs.new_release_published }}\`"
+            echo "- Last tag: \`${{ steps.semantic_release.outputs.last_release_git_tag }}\`"
             echo "- Next version: \`${{ steps.semantic_release.outputs.new_release_version }}\`"
             echo "- Next tag: \`${{ steps.semantic_release.outputs.new_release_git_tag }}\`"
             echo "- Preview auth: uses \`PAT_TOKEN\` because semantic-release dry-run still performs a remote push permission probe."
-            echo
-            if [ "${RELEASE_PUBLISHED}" = "true" ]; then
-              if [ "${RUN_MODE}" = "manual-publish" ]; then
-                echo "A releasable version was found. After the \`release-approval\` environment is approved, the workflow will create the tag and trigger \`Release on Tag\`."
-              else
-                echo "A releasable version was found. Run this workflow manually with \`mode=publish\` when you want to create the tag and trigger \`Release on Tag\`."
-              fi
-            else
-              echo "No releasable commits were found since the last tag. This run will not create a tag and will not trigger \`Release on Tag\`."
-            fi
+            echo "- Snapshot semantics: this preview is pinned to dispatch SHA \`${{ github.sha }}\`; commits added to \`main\` after the run starts are not included."
             if [ "${RELEASE_PUBLISHED}" = "true" ] && [ -n "${RELEASE_NOTES}" ]; then
               echo
               echo "<details><summary>Preview release notes</summary>"
@@ -160,57 +76,13 @@ jobs:
               echo
               echo "</details>"
             fi
-          } >> "${GITHUB_STEP_SUMMARY}"
-
-  no_release:
-    if: >
-      needs.preview.result == 'success' &&
-      github.event_name == 'workflow_dispatch' &&
-      needs.preview.outputs.publish_requested != 'true'
-    needs:
-      - preview
-    runs-on: ubuntu-latest
-    steps:
-      - name: Explain manual preview result
-        run: |
-          {
-            echo "## Manual Preview Complete"
             echo
-            echo "Manual preview mode does not publish anything."
-            echo
-            echo "- Last tag: \`${{ needs.preview.outputs.last_tag }}\`"
-            echo "- Commits since last tag: \`${{ needs.preview.outputs.commits_since_last_tag }}\`"
-            echo "- Release needed: \`${{ needs.preview.outputs.published }}\`"
-            echo "- Next version: \`${{ needs.preview.outputs.next_version }}\`"
-            echo "- Next tag: \`${{ needs.preview.outputs.next_tag }}\`"
-          } >> "${GITHUB_STEP_SUMMARY}"
-
-  no_publish_needed:
-    if: >
-      needs.preview.result == 'success' &&
-      github.event_name == 'workflow_dispatch' &&
-      needs.preview.outputs.publish_requested == 'true' &&
-      needs.preview.outputs.published != 'true'
-    needs:
-      - preview
-    runs-on: ubuntu-latest
-    steps:
-      - name: Explain why publish was skipped
-        run: |
-          {
-            echo "## Publish Skipped"
-            echo
-            echo "No releasable commits were found, so no tag or GitHub Release was created."
-            echo
-            echo "- Last tag: \`${{ needs.preview.outputs.last_tag }}\`"
-            echo "- Commits since last tag: \`${{ needs.preview.outputs.commits_since_last_tag }}\`"
-            echo "- Requested mode: \`${{ needs.preview.outputs.run_mode }}\`"
+            echo "If the version looks correct, approve the \`release-approval\` environment to continue."
           } >> "${GITHUB_STEP_SUMMARY}"
 
   release:
     if: >
-      github.event_name == 'workflow_dispatch' &&
-      needs.preview.outputs.publish_requested == 'true' &&
+      github.ref == 'refs/heads/main' &&
       needs.preview.result == 'success' &&
       needs.preview.outputs.published == 'true'
     needs:
@@ -226,7 +98,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-          ref: ${{ needs.preview.outputs.target_sha }}
+          ref: ${{ github.sha }}
 
       - name: Validate PAT token
         uses: ./.github/actions/validate-pat
@@ -234,7 +106,7 @@ jobs:
           pat-token: ${{ secrets.PAT_TOKEN }}
           repo-api-url: ${{ github.api_url }}/repos/${{ github.repository }}
           repository: ${{ github.repository }}
-          missing-token-message: PAT_TOKEN is required because a tag created with GITHUB_TOKEN will not trigger release.yml.
+          missing-token-message: PAT_TOKEN is required because a tag created with GITHUB_TOKEN will not trigger publish.yml.
 
       - name: Semantic release
         id: semantic_release
@@ -264,17 +136,15 @@ jobs:
           {
             echo "## Semantic Release Publish"
             echo
-            echo "- Workflow mode: \`${{ needs.preview.outputs.run_mode }}\`"
-            echo "- Branch: \`${{ needs.preview.outputs.target_branch }}\`"
-            echo "- Commit: \`${{ needs.preview.outputs.target_sha }}\`"
+            echo "- Commit: \`${{ github.sha }}\`"
             echo "- Preview last tag: \`${{ needs.preview.outputs.last_tag }}\`"
-            echo "- Preview commits since last tag: \`${{ needs.preview.outputs.commits_since_last_tag }}\`"
             echo "- Preview next version: \`${{ needs.preview.outputs.next_version }}\`"
             echo "- Preview next tag: \`${{ needs.preview.outputs.next_tag }}\`"
             echo "- Published: \`${{ steps.semantic_release.outputs.new_release_published }}\`"
             echo "- Last tag: \`${{ steps.semantic_release.outputs.last_release_git_tag }}\`"
             echo "- Next version: \`${{ steps.semantic_release.outputs.new_release_version }}\`"
             echo "- Next tag: \`${{ steps.semantic_release.outputs.new_release_git_tag }}\`"
+            echo "- Snapshot semantics: this publish run still uses dispatch SHA \`${{ github.sha }}\`; commits added to \`main\` after the preview started are excluded."
             if [ "${RELEASE_PUBLISHED}" = "true" ] && [ -n "${RELEASE_NOTES}" ]; then
               echo
               echo "<details><summary>Published release notes</summary>"
