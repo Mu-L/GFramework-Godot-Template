@@ -67,6 +67,7 @@ public partial class SceneTransitionManager : Node, IController
     {
         __InjectGetNodes_Generated();
         Instance = this;
+        ProcessMode = ProcessModeEnum.Pausable;
 
         _canvasLayer.Layer = 100; // 确保在最上层
         _previewViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled;
@@ -289,7 +290,7 @@ public partial class SceneTransitionManager : Node, IController
     /// <returns>协程指令枚举器。</returns>
     private IEnumerator<IYieldInstruction> TweenProgressCoroutine(float from, float to, float duration)
     {
-        var tween = CreateTween();
+        var tween = CreateTween().SetPauseMode(Tween.TweenPauseMode.Stop);
         tween.SetEase(Tween.EaseType.InOut);
         tween.SetTrans(Tween.TransitionType.Cubic);
 
