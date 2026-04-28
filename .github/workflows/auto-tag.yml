@@ -1,10 +1,6 @@
 name: Semantic Release Version and Tag
 
 on:
-  workflow_run:
-    workflows: ["CI - Build"]
-    types:
-      - completed
   workflow_dispatch:
 
 concurrency:
@@ -14,15 +10,7 @@ concurrency:
 jobs:
   preview:
     if: >
-      (
-        github.event_name == 'workflow_run' &&
-        github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.head_branch == 'main'
-      ) ||
-      (
-        github.event_name == 'workflow_dispatch' &&
-        github.ref == 'refs/heads/main'
-      )
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -31,26 +19,13 @@ jobs:
       last_tag: ${{ steps.semantic_release.outputs.last_release_git_tag }}
       next_version: ${{ steps.semantic_release.outputs.new_release_version }}
       next_tag: ${{ steps.semantic_release.outputs.new_release_git_tag }}
-      target_sha: ${{ steps.release_context.outputs.target_sha }}
-      target_branch: ${{ steps.release_context.outputs.target_branch }}
     steps:
-      - name: Resolve release context
-        id: release_context
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            echo "target_sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
-            echo "target_branch=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "target_sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-            echo "target_branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Checkout code
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
-          ref: ${{ steps.release_context.outputs.target_sha }}
+          ref: ${{ github.sha }}
 
       - name: Validate PAT token
         uses: ./.github/actions/validate-pat
@@ -86,13 +61,13 @@ jobs:
           {
             echo "## Semantic Release Preview"
             echo
-            echo "- Branch: \`${{ steps.release_context.outputs.target_branch }}\`"
-            echo "- Commit: \`${{ steps.release_context.outputs.target_sha }}\`"
+            echo "- Commit: \`${{ github.sha }}\`"
             echo "- Release needed: \`${{ steps.semantic_release.outputs.new_release_published }}\`"
             echo "- Last tag: \`${{ steps.semantic_release.outputs.last_release_git_tag }}\`"
             echo "- Next version: \`${{ steps.semantic_release.outputs.new_release_version }}\`"
             echo "- Next tag: \`${{ steps.semantic_release.outputs.new_release_git_tag }}\`"
             echo "- Preview auth: uses \`PAT_TOKEN\` because semantic-release dry-run still performs a remote push permission probe."
+            echo "- Snapshot semantics: this preview is pinned to dispatch SHA \`${{ github.sha }}\`; commits added to \`main\` after the run starts are not included."
             if [ "${RELEASE_PUBLISHED}" = "true" ] && [ -n "${RELEASE_NOTES}" ]; then
               echo
               echo "<details><summary>Preview release notes</summary>"
@@ -107,6 +82,7 @@ jobs:
 
   release:
     if: >
+      github.ref == 'refs/heads/main' &&
       needs.preview.result == 'success' &&
       needs.preview.outputs.published == 'true'
     needs:
@@ -122,7 +98,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-          ref: ${{ needs.preview.outputs.target_sha }}
+          ref: ${{ github.sha }}
 
       - name: Validate PAT token
         uses: ./.github/actions/validate-pat
@@ -130,7 +106,7 @@ jobs:
           pat-token: ${{ secrets.PAT_TOKEN }}
           repo-api-url: ${{ github.api_url }}/repos/${{ github.repository }}
           repository: ${{ github.repository }}
-          missing-token-message: PAT_TOKEN is required because a tag created with GITHUB_TOKEN will not trigger release.yml.
+          missing-token-message: PAT_TOKEN is required because a tag created with GITHUB_TOKEN will not trigger publish.yml.
 
       - name: Semantic release
         id: semantic_release
@@ -160,8 +136,7 @@ jobs:
           {
             echo "## Semantic Release Publish"
             echo
-            echo "- Branch: \`${{ needs.preview.outputs.target_branch }}\`"
-            echo "- Commit: \`${{ needs.preview.outputs.target_sha }}\`"
+            echo "- Commit: \`${{ github.sha }}\`"
             echo "- Preview last tag: \`${{ needs.preview.outputs.last_tag }}\`"
             echo "- Preview next version: \`${{ needs.preview.outputs.next_version }}\`"
             echo "- Preview next tag: \`${{ needs.preview.outputs.next_tag }}\`"
@@ -169,6 +144,7 @@ jobs:
             echo "- Last tag: \`${{ steps.semantic_release.outputs.last_release_git_tag }}\`"
             echo "- Next version: \`${{ steps.semantic_release.outputs.new_release_version }}\`"
             echo "- Next tag: \`${{ steps.semantic_release.outputs.new_release_git_tag }}\`"
+            echo "- Snapshot semantics: this publish run still uses dispatch SHA \`${{ github.sha }}\`; commits added to \`main\` after the preview started are excluded."
             if [ "${RELEASE_PUBLISHED}" = "true" ] && [ -n "${RELEASE_NOTES}" ]; then
               echo
               echo "<details><summary>Published release notes</summary>"

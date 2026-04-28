@@ -30,7 +30,7 @@
     </ItemGroup>
     <ItemGroup>
         <Content Include=".github\workflows\auto-tag.yml"/>
-        <Content Include=".github\workflows\release.yml"/>
+        <Content Include=".github\workflows\publish.yml"/>
         <Content Include="addons.jsonc" />
         <Content Include="global\README.md" />
         <Content Include="scripts\command\README.md" />

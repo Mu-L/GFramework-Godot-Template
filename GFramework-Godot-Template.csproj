@@ -216,7 +216,7 @@
         <Content Include=".github\workflows\auto-tag.yml"/>
         <Content Include=".github\workflows\ci.yml"/>
         <Content Include=".github\workflows\codeql.yml"/>
-        <Content Include=".github\workflows\release.yml"/>
+        <Content Include=".github\workflows\publish.yml"/>
         <Content Include="addons.jsonc"/>
         <Content Include="global\README.md"/>
         <Content Include="scripts\data\model\README.md"/>
